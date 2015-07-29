@@ -60,7 +60,7 @@
   - set_fact: ec2_instance_type={{ c_instance }}
   - set_fact: r53_zone={{ c_zone }}
   - set_fact: r53_host_zone={{ c_host_prefix }}.{{ c_zone }}
-  - set_fact: r53_wildcard_zone={{ c_wildcard_prefix }}.{{ c_zone }}
+  - set_fact: r53_wildcard_zone={{ c_wildcard_prefix }}.{{ r53_host_zone }}
   - set_fact: num_app_nodes={{ cluster_sizes[c_cluster_size] }}
   - set_fact: hexboard_size={{ c_cluster_size }}
 
