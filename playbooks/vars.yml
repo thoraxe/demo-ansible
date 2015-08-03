@@ -18,7 +18,7 @@ preload_images:
 - openshift3/ose-docker-builder:latest
 - openshift3/ose-deployer:latest
 
-default_password: {{cluster_id}}
+default_password: {{ cluster_id }}
 hexboard:
   namespace: demo
   watch_namespace: demo
