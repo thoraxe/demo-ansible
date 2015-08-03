@@ -46,7 +46,6 @@
       name: sketchproxy
       project: default
       region: demo
-  - default_password: I@mRedH@t
   - users:
     - name: demo
       project: demo
@@ -56,8 +55,8 @@
     - name: cache
       project: cache
   tasks:
-  - command: "htpasswd -b /etc/openshift/master/htpasswd {{ item.name }} {{ default_password }}"
-    with_items: users
+  - command: "htpasswd -b /etc/openshift/master/htpasswd {{ item }} {{ default_password }}"
+    with_sequence: start=0 end=40 format=user%02x
 
   - command: oc project default
 
@@ -90,64 +89,64 @@
     register: registry_out
     ignore_errors: true
 
-  - command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --selector='region=infra' --images='{{ registry_image_url }}'"
+  - command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --selector='region=infra' --images='{{ registry_template }}'"
     when: registry_out | failed
 
   - command: oc get projects
     register: projects
 
-  - command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}'"
-    when: item.project not in projects.stdout
-    with_items: users | union(mock_users)
-
-  - command: oc project default
-
-  - command: oadm policy add-role-to-user admin {{ item.name }} -n {{ item.project }}
-    when: item.project not in projects.stdout
-    with_items: users
-
-  - command: oc project default
-
-  - command: oc get dc
-    register: dcs_out
-    failed_when: "hexboard.name not in dcs_out"
-    ignore_errors: true
-
-  - command: oc login -u {{ users.0.name }} -p {{ default_password }}
-    when: dcs_out | failed
-
-  - script: ../files/get_token.sh
-    register: auth_token
-    when: dcs_out | failed
-
-  - set_fact:
-      access_token: "{{ auth_token.stdout }}"
-    when: dcs_out | failed
-
-  - command: oc project {{ hexboard.namespace }}
-    when: dcs_out | failed
-
-  - template:
-      dest: /root/hexboard_template.json
-      src: ../templates/hexboard_template.json.j2
-    when: dcs_out | failed
-
-  - command: oc create -f /root/hexboard_template.json
-    when: dcs_out | failed
-
-  # TODO: it appears the build fails sometimes, need to do better validation
-  # on the build and attempt 1 or more retries if it fails
-  - command: oc start-build {{ hexboard.name }}
-    when: dcs_out | failed
-
-  - script: ../files/get_context.sh
-    register: default_context
-    when: dcs_out | failed
-
-  - command: oc config use-context {{ default_context.stdout }}
-    when: dcs_out | failed
-
-  - command: oc project default
+    #  - command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}'"
+    #    when: item.project not in projects.stdout
+    #    with_items: users | union(mock_users)
+    #
+    #  - command: oc project default
+    #
+    #  - command: oadm policy add-role-to-user admin {{ item.name }} -n {{ item.project }}
+    #    when: item.project not in projects.stdout
+    #    with_items: users
+    #
+    #  - command: oc project default
+    #
+    #  - command: oc get dc
+    #    register: dcs_out
+    #    failed_when: "hexboard.name not in dcs_out"
+    #    ignore_errors: true
+    #
+    #  - command: oc login -u {{ users.0.name }} -p {{ default_password }}
+    #    when: dcs_out | failed
+    #
+    #  - script: ../files/get_token.sh
+    #    register: auth_token
+    #    when: dcs_out | failed
+    #
+    #  - set_fact:
+    #      access_token: "{{ auth_token.stdout }}"
+    #    when: dcs_out | failed
+    #
+    #  - command: oc project {{ hexboard.namespace }}
+    #    when: dcs_out | failed
+    #
+    #  - template:
+    #      dest: /root/hexboard_template.json
+    #      src: ../templates/hexboard_template.json.j2
+    #    when: dcs_out | failed
+    #
+    #  - command: oc create -f /root/hexboard_template.json
+    #    when: dcs_out | failed
+    #
+    #  # TODO: it appears the build fails sometimes, need to do better validation
+    #  # on the build and attempt 1 or more retries if it fails
+    #  - command: oc start-build {{ hexboard.name }}
+    #    when: dcs_out | failed
+    #
+    #  - script: ../files/get_context.sh
+    #    register: default_context
+    #    when: dcs_out | failed
+    #
+    #  - command: oc config use-context {{ default_context.stdout }}
+    #    when: dcs_out | failed
+    #
+    #  - command: oc project default
 
 
   - command: oc get service
