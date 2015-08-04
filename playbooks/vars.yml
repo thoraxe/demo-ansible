@@ -17,8 +17,12 @@ preload_images:
 - openshift3/ose-sti-builder:latest
 - openshift3/ose-docker-builder:latest
 - openshift3/ose-deployer:latest
+- openshift3/ruby-20-rhel7
+- openshift3/mysql-55-rhel7
+- openshift3/php-55-rhel7
+- jboss-eap-6/eap-openshift
 
-default_password: {{ cluster_id }}
+default_password: "{{ cluster_id }}"
 hexboard:
   namespace: demo
   watch_namespace: demo
