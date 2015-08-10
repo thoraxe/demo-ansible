@@ -120,7 +120,7 @@
     ignore_errors: true
 
   - name: Install registry
-    command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig"
+    command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --images={{ registry_image_url }}"
     when: registry_out | failed
 
   - command: oc get projects

@@ -25,9 +25,9 @@
       instance_groups: "{{ host_groups | union(node_groups) | unique }}"
       instance_tags: "{{ host_tags | oo_dict_merge(node_tags) }}"
       volumes:
-      - volume_size: 60
+      - volume_size: 30
         device_type: io1
-        iops: 1800
+        iops: 900
         device_name: /dev/sda1
         delete_on_termination: True
       - device_name: /dev/xvdb
