@@ -71,6 +71,16 @@
     command: "htpasswd -b /etc/openshift/master/htpasswd {{ item }} {{ default_password }}"
     with_sequence: start=0 end=40 format=user%02d
 
+  - name: Set default nodeSelector
+    lineinfile:
+      dest: /etc/openshift/master/master-config.yaml
+      state: present
+      regexp: '^  defaultNodeSelector: ""$'
+      line: '  defaultNodeSelector: "region=demo"'
+    notify: restart openshift-master
+
+  - meta: flush_handlers
+
   - command: oc project default
 
   - name: Fix node labels
@@ -122,8 +132,12 @@
     ignore_errors: true
 
   - name: Install registry
-    command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --images={{ registry_image_url }}"
+    command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --images='{{ registry_image_url }}'"
     when: registry_out | failed
+
+  - command: oc env dc/docker-registry GOMAXPROCS={{ groups['ec2_tag_node-region_infra'].0.ansible_processor_cores }}
+
+  - pause: minutes=1
 
   - command: oc get projects
     register: projects
@@ -208,7 +222,6 @@
     #    when: dcs_out | failed
     #
     #  - command: oc project default
-
 
   - command: oc get service
     register: service_out
