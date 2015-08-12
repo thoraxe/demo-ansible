@@ -75,27 +75,6 @@
     command: "htpasswd -b /etc/openshift/master/htpasswd {{ item }} {{ default_password }}"
     with_sequence: start=0 end=40 format=user%02d
 
-  - name: Set default nodeSelector
-    lineinfile:
-      dest: /etc/openshift/master/master-config.yaml
-      state: present
-      regexp: '^  defaultNodeSelector: ""$'
-      line: '  defaultNodeSelector: "region=demo"'
-    notify: restart openshift-master
-
-  - meta: flush_handlers
-
-  - command: "htpasswd -b /etc/openshift/master/htpasswd {{ item }} {{ default_password }}"
-    with_sequence: start=0 end=40 format=user%02x
-
-  - name: Set default nodeSelector
-    lineinfile:
-      dest: /etc/openshift/master/master-config.yaml
-      state: present
-      regexp: '^  defaultNodeSelector: ""$'
-      line: '  defaultNodeSelector: "region=demo"'
-    notify: restart openshift-master
-
   - command: oc project default
 
   - name: Fix node labels
