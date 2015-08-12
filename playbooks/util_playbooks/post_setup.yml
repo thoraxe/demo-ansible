@@ -150,14 +150,18 @@
     command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --images='{{ registry_image_url }}'"
     when: registry_out | failed
 
-  - command: oc env dc/docker-registry GOMAXPROCS={{ hostvars[groups['tag_node-region_infra'].0].ansible_processor_cores }}
+  - name: Set registry GOMAXPROCS
+    command: oc env dc/docker-registry GOMAXPROCS={{ hostvars[groups['tag_node-region_infra'].0].ansible_processor_cores }}
 
-  - pause: minutes=1
+  - name: Wait for 60 seconds for registry to re-deploy
+    pause: minutes=1
 
-  - command: oc get projects
+  - name: Find current projects list
+    command: oc get projects
     register: projects
 
-  - command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}'"
+  - name: Create projects for internal users
+    command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}'"
     when: item.project not in projects.stdout
     with_items: users
 
@@ -166,34 +170,6 @@
   - pause: minutes=1
 
   - command: oc project default
-
-  # Set up the smoke project and app
-  - name: Create user smoke test projects
-    command: "oadm new-project {{ item }}-smoke --display-name='Smoke Test' --admin={{ item }}"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-  - name: Create "app" in smoke projects
-    command: "oc new-app openshift/php~https://github.com/gshipley/smoke.git -n {{ item }}-smoke"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-  - name: Expose smoke project service
-    command: "oc expose service smoke -n {{ item }}-smoke"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-  - name: Wait to scale smoke app for first deployment
-    shell: "oc get rc --all-namespaces | grep smoke | wc -l"
-    register: build_output
-    until: build_output.stdout.find("41") != -1
-    retries: 11
-    delay: 30
-
-  - name: Scale smoke app
-    command: "oc scale dc/smoke --replicas=2 -n {{ item }}-smoke"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
 
 #  - command: oc get dc -n {{ hexboard.namespace }}
 #    register: dcs_out
