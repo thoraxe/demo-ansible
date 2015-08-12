@@ -217,7 +217,7 @@
     default_context: '{{ "default/" ~ (hostvars[groups.oo_first_master.0].openshift.common.hostname | regex_replace("\.", "-")) ~ ":" ~ hostvars[groups.oo_first_master.0].openshift.master.api_port ~ "/system:admin" }}'
   serial: 1
   tasks:
-  - command: docker pull openshift3/{{ item.image }}:{{ item.tag }}
+  - command: docker pull {{ item.image }}:{{ item.tag }}
     with_items: prime_images
 
   - command: docker tag -f {{item.image}} {{ registry_ip }}:{{ registry_port }}/{{ prime_namespace }}/{{ item.image }}:{{ item.tag }}
