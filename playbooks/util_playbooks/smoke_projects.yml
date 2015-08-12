@@ -4,6 +4,7 @@
   hosts: oo_first_master
   vars_files:
   - ../vars.yml
+  tasks:
   # Set up the smoke project and app
   - name: Create user smoke test projects
     command: "oadm new-project {{ item }}-smoke --display-name='Smoke Test' --admin={{ item }}"
