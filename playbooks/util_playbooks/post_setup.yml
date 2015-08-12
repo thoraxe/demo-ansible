@@ -52,11 +52,7 @@
       name: sketchproxy
       project: default
       region: demo
-<<<<<<< HEAD
-  - users:
-=======
     users:
->>>>>>> detiber/roadshow-work
     - name: demo
       project: demo
     - name: hexboard
@@ -154,9 +150,6 @@
     command: "oadm registry --credentials=/etc/openshift/master/openshift-registry.kubeconfig --images='{{ registry_image_url }}'"
     when: registry_out | failed
 
-<<<<<<< HEAD
-  - command: oc env dc/docker-registry GOMAXPROCS={{ groups['ec2_tag_node-region_infra'].0.ansible_processor_cores }}
-=======
   - command: oc env dc/docker-registry GOMAXPROCS={{ hostvars[groups['tag_node-region_infra'].0].ansible_processor_cores }}
 
   - pause: minutes=1
@@ -169,95 +162,9 @@
     with_items: users
 
   - command: oc project default
->>>>>>> detiber/roadshow-work
 
   - pause: minutes=1
 
-<<<<<<< HEAD
-  - command: oc get projects
-    register: projects
-
-  # Set up the smoke project and app
-  - name: Create user smoke test projects
-    command: "oadm new-project {{ item }}-smoke --display-name='Smoke Test' --admin={{ item }}"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-  - name: Create "app" in smoke projects
-    command: "oc new-app openshift/php~https://github.com/gshipley/smoke.git -n {{ item }}-smoke"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-  - name: Expose smoke project service
-    command: "oc expose service smoke -n {{ item }}-smoke"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-  - name: Wait to scale smoke app for first deployment
-    shell: "oc get rc --all-namespaces | grep smoke | wc -l"
-    register: build_output
-    until: build_output.stdout.find("41") != -1
-    retries: 11
-    delay: 30
-
-  - name: Scale smoke app
-    command: "oc scale dc/smoke --replicas=2 -n {{ item }}-smoke"
-    when: item not in projects.stdout
-    with_sequence: start=0 end=40 format=user%02d
-
-    #  - command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}'"
-    #    when: item.project not in projects.stdout
-    #    with_items: users | union(mock_users)
-    #
-    #  - command: oc project default
-    #
-    #  - command: oadm policy add-role-to-user admin {{ item.name }} -n {{ item.project }}
-    #    when: item.project not in projects.stdout
-    #    with_items: users
-    #
-    #  - command: oc project default
-    #
-    #  - command: oc get dc
-    #    register: dcs_out
-    #    failed_when: "hexboard.name not in dcs_out"
-    #    ignore_errors: true
-    #
-    #  - command: oc login -u {{ users.0.name }} -p {{ default_password }}
-    #    when: dcs_out | failed
-    #
-    #  - script: ../files/get_token.sh
-    #    register: auth_token
-    #    when: dcs_out | failed
-    #
-    #  - set_fact:
-    #      access_token: "{{ auth_token.stdout }}"
-    #    when: dcs_out | failed
-    #
-    #  - command: oc project {{ hexboard.namespace }}
-    #    when: dcs_out | failed
-    #
-    #  - template:
-    #      dest: /root/hexboard_template.json
-    #      src: ../templates/hexboard_template.json.j2
-    #    when: dcs_out | failed
-    #
-    #  - command: oc create -f /root/hexboard_template.json
-    #    when: dcs_out | failed
-    #
-    #  # TODO: it appears the build fails sometimes, need to do better validation
-    #  # on the build and attempt 1 or more retries if it fails
-    #  - command: oc start-build {{ hexboard.name }}
-    #    when: dcs_out | failed
-    #
-    #  - script: ../files/get_context.sh
-    #    register: default_context
-    #    when: dcs_out | failed
-    #
-    #  - command: oc config use-context {{ default_context.stdout }}
-    #    when: dcs_out | failed
-    #
-    #  - command: oc project default
-=======
   - command: oc project default
 
   # Set up the smoke project and app
@@ -369,32 +276,8 @@
     when: inventory_hostname == groups.oo_first_master.0
 
   - command: docker login -u {{ prime_user }} -e {{ prime_user }}@{{ prime_namespace }}.local -p {{ token_result.stdout }} {{ registry_ip }}:{{ registry_port }}
->>>>>>> detiber/roadshow-work
 
   - command: docker push {{ registry_ip }}:{{ registry_port }}/{{ prime_namespace }}/{{ item.image }}:{{ item.tag }}
     with_items: prime_images
 
   - command: docker logout
-
-<<<<<<< HEAD
-# TODO: re-enable node priming, currently hangs on docker push waiting for
-# authentication
-#- name: Node post config
-#  hosts: oo_nodes_to_config
-#  vars:
-#    prime_image: nodejs-010-rhel7
-#    prime_tag: latest
-#    prime_namespace: cache
-#    registry_ip: "{{ hostvars[groups.oo_first_master.0].registry_ip }}"
-#    registry_port: "{{ hostvars[groups.oo_first_master.0].registry_port }}"
-#  serial: 1
-#  tasks:
-#  # prime the registry with the nodejs image
-#  - command: docker pull openshift3/{{ prime_image }}:{{ prime_tag }}
-#  - command: docker tag -f openshift3/{{prime_image}} {{ registry_ip }}:{{ registry_port }}/{{ prime_namespace }}/{{ prime_image }}:{{ prime_tag }}
-#  - command: docker push {{ registry_ip }}:{{ registry_port }}/{{ prime_namespace }}/{{ prime_image }}:{{ prime_tag }}
-  handlers:
-    - name: restart openshift-master
-      service: name=openshift-master state=restarted
-=======
->>>>>>> detiber/roadshow-work
