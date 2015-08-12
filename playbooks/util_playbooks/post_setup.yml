@@ -150,10 +150,6 @@
 
   - command: oc project default
 
-  - pause: minutes=1
-
-  - command: oc project default
-
 #  - command: oc get dc -n {{ hexboard.namespace }}
 #    register: dcs_out
 #    failed_when: "hexboard.name not in dcs_out"
