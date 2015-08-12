@@ -8,6 +8,8 @@ identity_providers:
   kind: HTPasswdPasswordIdentityProvider
   filename: /etc/openshift/master/htpasswd
 
+default_password: "{{ cluster_id }}"
+
 registry_template: 'registry.access.redhat.com/openshift3/ose-${component}:${version}'
 registry_image_url: 'pmorie/origin-docker-registry:latest'
 preload_images:
@@ -21,6 +23,12 @@ preload_images:
 - openshift3/mysql-55-rhel7
 - openshift3/php-55-rhel7
 - jboss-eap-6/eap-openshift
+
+prime_user: cache
+prime_namespace: cache
+prime_images:
+- image: nodejs-010-rhel7
+  tag: latest
 
 default_password: "{{ cluster_id }}"
 hexboard:
