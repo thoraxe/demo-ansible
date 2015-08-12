@@ -27,12 +27,15 @@ preload_images:
 prime_user: cache
 prime_namespace: cache
 prime_images:
-- image: openshift3/nodejs-010-rhel7
+- image: nodejs-010-rhel7
   tag: latest
-- image: openshift3/php-55-rhel7
+  prefix: openshift3
+- image: php-55-rhel7
   tag: latest
-- image: jboss-eap-6/eap-openshift
+  prefix: openshift3
+- image: eap-openshift
   tag: latest
+  prefix: jboss-eap-6
 
 default_password: "{{ cluster_id }}"
 hexboard:
