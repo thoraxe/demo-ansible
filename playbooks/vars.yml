@@ -23,6 +23,7 @@ preload_images:
 - openshift3/mysql-55-rhel7
 - openshift3/php-55-rhel7
 - jboss-eap-6/eap-openshift
+- kubernetes/guestbook
 
 prime_user: cache
 prime_namespace: cache
