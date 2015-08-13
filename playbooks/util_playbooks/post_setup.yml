@@ -158,7 +158,7 @@
     when: registry_out | failed
 
   - name: Set registry GOMAXPROCS
-  - command: oc env dc/docker-registry GOMAXPROCS={{ hostvars[groups.oo_first_infra_node.0].ansible_processor_cores }}
+    command: oc env dc/docker-registry GOMAXPROCS={{ hostvars[groups.oo_first_infra_node.0].ansible_processor_cores }}
 
   - name: Wait for 60 seconds for registry to re-deploy
     pause: minutes=1
