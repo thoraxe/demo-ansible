@@ -44,6 +44,16 @@
       state: present
       create: yes
 
+  - name: Lower node loglevel
+    lineinfile:
+      dest: /etc/sysconifg/atomic-openshift-node
+      regexp: "^OPTIONS=.*"
+      line: "OPTIONS=--loglevel=1"
+      state: present
+
+  - name: restart node
+    service: name={{ openshift.common.service_type }}-node state=restarted
+
   - name: pre-pull images
     command: "docker pull {{ item }}"
     with_items: preload_images
