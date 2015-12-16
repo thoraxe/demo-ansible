@@ -46,7 +46,7 @@
 
   - name: Lower node loglevel
     lineinfile:
-      dest: /etc/sysconifg/atomic-openshift-node
+      dest: /etc/sysconfig/atomic-openshift-node
       regexp: "^OPTIONS=.*"
       line: "OPTIONS=--loglevel=1"
       state: present
