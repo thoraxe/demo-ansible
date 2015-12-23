@@ -5,6 +5,9 @@
   gather_facts: no
   connection: local
   sudo: no
+  vars:
+    vpc_subnets: "{{ lookup('ec2_zones_by_region', ec2_region) | oo_split
+                     | oo_subnets_from_zones('172.18.', cluster_id) }}"
   tasks:
   - fail:
       msg: required values not set
@@ -20,15 +23,10 @@
         env: "{{ cluster_id }}"
         Name: "{{ cluster_id }}-vpc"
       region: "{{ ec2_region }}"
-      subnets:
-      - cidr: 172.18.1.0/24
-        resource_tags:
-          env: "{{ cluster_id }}"
-          Name: "{{ cluster_id }}-subnet"
+      subnets: "{{ vpc_subnets }}"
       internet_gateway: yes
       route_tables:
-      - subnets:
-        - 172.18.1.0/24
+      - subnets: "{{ vpc_subnets | oo_collect('cidr') }}"
         routes:
         - dest: 0.0.0.0/0
           gw: igw
