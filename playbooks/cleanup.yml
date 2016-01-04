@@ -1,0 +1,125 @@
+---
+- hosts: localhost
+  connection: local
+  become: no
+  gather_facts: no
+  vars_files:
+  - vars.yml
+  tasks:
+  - add_host:
+      name: "{{ item }}"
+      ansible_ssh_user: openshift
+      ansible_sudo: yes
+      groups: oo_hosts_to_unregister
+    with_items: groups['tag_env_' ~ cluster_id] | default([], True)
+
+- name: Unregister host(s)
+  hosts: oo_hosts_to_unregister
+  serial: 1
+  tasks:
+  - name: Unregister host
+    redhat_subscription:
+      username: "{{ rhsm_user }}"
+      password: "{{ rhsm_pass }}"
+      state: absent
+
+- hosts: localhost
+  connection: local
+  become: no
+  gather_facts: no
+  vars_files:
+  - vars.yml
+  tasks:
+  - name: Delete the node ASGs
+    ec2_asg:
+      name: openshift-node-{{ cluster_id }}-{{ item.name }}
+      region: "{{ ec2_region }}"
+      state: absent
+    with_items: os_defaults.regions
+  - name: Delete the node LC
+    ec2_lc:
+      name: openshift-node-{{ cluster_id }}-{{ item.name }}
+      region: "{{ ec2_region }}"
+      state: absent
+    with_items: os_defaults.regions
+  - name: Delete the master ASG
+    ec2_asg:
+      name: openshift-masters-{{ cluster_id }}
+      region: "{{ ec2_region }}"
+      state: absent
+  - name: Delete the master LC
+    ec2_lc:
+      name: openshift-masters-{{ cluster_id }}
+      region: "{{ ec2_region }}"
+      state: absent
+  - name: Delete the ELBs
+    ec2_elb_lb:
+      name: "{{ item }}"
+      region: "{{ ec2_region }}"
+      state: absent
+    with_items:
+    - openshift-master-{{ cluster_id }}-external
+    - openshift-master-{{ cluster_id }}-internal
+    - openshift-node-{{ cluster_id }}-infra
+
+  - name: Get the r53 entries
+    route53:
+      command: get
+      zone: "{{ r53_zone }}"
+      record: "{{ item }}"
+      type: A
+    register: r53_results
+    with_items:
+    - openshift.{{ r53_host_zone }}
+    - openshift-internal.{{ r53_host_zone }}
+    - openshift-master.{{ r53_host_zone }}
+    - '*.{{ r53_wildcard_zone }}'
+
+  - name: Delete the r53 entries
+    route53:
+      command: delete
+      type: "{{ item.set.type }}"
+      zone: "{{ r53_zone }}"
+      record: "{{ item.item }}"
+      value: "{{ item.set.value }}"
+      ttl: "{{ item.set.ttl }}"
+      alias: "{{ item.set.alias }}"
+      alias_hosted_zone_id: "{{ item.set.alias_hosted_zone_id }}"
+    when: item.set
+    with_items: r53_results.results
+
+  - name: Delete problematic security group rules
+    ec2_group:
+      name: "{{ cluster_id }}-node"
+      description: blah
+      region: "{{ ec2_region }}"
+      rules: []
+      state: present
+    register: delete_sg_rules
+
+  - name: pause
+    pause:
+      seconds: 10
+    when: delete_sg_rules | changed
+
+  - name: Delete Security Groups
+    ec2_group:
+      name: "{{ item }}"
+      description: Blah
+      region: "{{ ec2_region }}"
+      state: absent
+    with_items:
+    - "{{ cluster_id }}-infra-lb"
+    - "{{ cluster_id }}-ext-lb"
+    - "{{ cluster_id }}-int-lb"
+    - "{{ cluster_id }}-node"
+    - "{{ cluster_id }}-master"
+
+  - name: Delete the VPC
+    ec2_vpc:
+      resource_tags:
+        env: "{{ cluster_id }}"
+        Name: "{{ cluster_id }}-vpc"
+      region: "{{ ec2_region }}"
+      cidr_block: 172.18.0.0/16
+      state: absent
