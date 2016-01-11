@@ -33,13 +33,13 @@
       - proto: tcp
         from_port: 443
         to_port: 443
-        group_name: "{{ cluster_id }}-node"
-        group_desc: "{{ cluster_id }} nodes"
+        group_name: "{{ cluster_id }}-infra"
+        group_desc: "{{ cluster_id }}-infra"
       - proto: tcp
         from_port: 80
         to_port: 80
-        group_name: "{{ cluster_id }}-node"
-        group_desc: "{{ cluster_id }} nodes"
+        group_name: "{{ cluster_id }}-infra"
+        group_desc: "{{ cluster_id }}-infra"
     register: infra_lb_sg
 
   - name: Create ec2 master external lb security group
@@ -111,6 +111,28 @@
       - proto: all
         cidr_ip: 0.0.0.0/0
     register: node_sg
+
+  - name: Create ec2 infra security group
+    ec2_group:
+      region: "{{ ec2_region }}"
+      vpc_id: "{{ vpc_id }}"
+      name: "{{ cluster_id }}-infra"
+      description: "{{ cluster_id }}-infra"
+      rules:
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        group_name: "{{ cluster_id }}-infra-lb"
+        group_desc: "{{ cluster_id }}-infra-lb"
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        group_name: "{{ cluster_id }}-infra-lb"
+        group_desc: "{{ cluster_id }}-infra-lb"
+      rules_egress:
+      - proto: all
+        cidr_ip: 0.0.0.0/0
+    register: infra_sg
 
   - name: Create ec2 master security group
     ec2_group:

@@ -90,12 +90,19 @@
 
   - name: Delete problematic security group rules
     ec2_group:
-      name: "{{ cluster_id }}-node"
+      name: "{{ item }}"
       description: blah
       region: "{{ ec2_region }}"
       rules: []
       state: present
     register: delete_sg_rules
+    with_items:
+    - "{{ cluster_id }}-infra"
+    - "{{ cluster_id }}-master"
+    - "{{ cluster_id }}-node"
+    - "{{ cluster_id }}-infra-lb"
+    - "{{ cluster_id }}-ext-lb"
+    - "{{ cluster_id }}-int-lb"
 
   - name: pause
     pause:
@@ -109,11 +116,12 @@
       region: "{{ ec2_region }}"
       state: absent
     with_items:
+    - "{{ cluster_id }}-infra"
+    - "{{ cluster_id }}-master"
+    - "{{ cluster_id }}-node"
     - "{{ cluster_id }}-infra-lb"
     - "{{ cluster_id }}-ext-lb"
     - "{{ cluster_id }}-int-lb"
-    - "{{ cluster_id }}-node"
-    - "{{ cluster_id }}-master"
 
   - name: Delete the VPC
     ec2_vpc:

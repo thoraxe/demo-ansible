@@ -63,7 +63,7 @@
       project: demo
     - name: "{{ prime_user }}"
       project: "{{ prime_namespace }}"
-    default_context: '{{ "default/" ~ (hostvars[groups.oo_first_master.0].openshift.common.hostname | regex_replace("\.", "-")) ~ ":" ~ hostvars[groups.oo_first_master.0].openshift.master.api_port ~ "/system:admin" }}'
+    default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
   tasks:
   - name: Create the default users
     command: "htpasswd -b /etc/origin/master/htpasswd {{ item.name }} {{ default_password }}"

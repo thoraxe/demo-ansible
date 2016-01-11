@@ -27,4 +27,5 @@
   vars:
     master_sg_id: "{{ master_sg.group_id }}"
     node_sg_id: "{{ node_sg.group_id }}"
+    infra_sg_id: "{{ infra_sg.group_id }}"
     vpc_subnet_ids: "{{ vpc.subnets | oo_collect('id') }}"

@@ -57,7 +57,7 @@
       image_id: "{{ ec2_image }}"
       key_name: "{{ ec2_keypair }}"
       region: "{{ ec2_region }}"
-      security_groups: "{{ [node_sg_id] }}"
+      security_groups: "{{ [node_sg_id, infra_sg_id] if item.name == 'infra' else [node_sg_id] }}"
       instance_type: "{{ item.instance_type }}"
       assign_public_ip: yes
       #instance_profile_name:
