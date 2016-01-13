@@ -24,6 +24,12 @@ preload_images:
 - jboss-eap-6/eap64-openshift:latest
 - kubernetes/guestbook:latest
 
+users:
+- user: demo
+  project: demo
+- user: cache
+  project: cache
+
 prime_user: cache
 prime_namespace: cache
 prime_images:

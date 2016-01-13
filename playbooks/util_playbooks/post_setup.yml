@@ -48,6 +48,15 @@
     command: "docker pull {{ item }}"
     with_items: preload_images
 
+- name: Master auth config
+  hosts: oo_masters_to_config
+  vars_files:
+  - ../vars.yml
+  tasks:
+  - name: Create the default users
+    command: "htpasswd -b /etc/origin/master/htpasswd {{ item.user }} {{ default_password }}"
+    with_items: users
+
 - name: First master post config
   hosts: oo_first_master
   vars_files:
@@ -58,17 +67,8 @@
       name: sketchproxy
       project: default
       region: demo
-    users:
-    - name: demo
-      project: demo
-    - name: "{{ prime_user }}"
-      project: "{{ prime_namespace }}"
     default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
   tasks:
-  - name: Create the default users
-    command: "htpasswd -b /etc/origin/master/htpasswd {{ item.name }} {{ default_password }}"
-    with_items: users
-
   - command: oc project default
 
   - name: Set nodeselector for the default project to be region=infra
@@ -113,7 +113,7 @@
     register: projects
 
   - name: Create projects for internal users
-    command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}' --admin='{{ item.name }}'"
+    command: "oadm new-project {{ item.project }} --display-name='{{ item.project.title() }}' --node-selector='region={{ item.project }}' --admin='{{ item.user }}'"
     when: item.project not in projects.stdout
     with_items: users
 
@@ -124,7 +124,7 @@
     failed_when: "hexboard.name not in dcs_out"
     ignore_errors: true
 
-  - command: oc login -u {{ users.0.name }} -p {{ default_password }} --certificate-authority=/etc/origin/master/ca.crt
+  - command: oc login -u {{ users.0.user }} -p {{ default_password }} --certificate-authority=/etc/origin/master/ca.crt
     when: dcs_out | failed
 
   - script: ../files/get_token.sh

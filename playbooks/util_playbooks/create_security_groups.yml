@@ -158,9 +158,13 @@
         to_port: "{{ console_port }}"
         cidr_ip: 0.0.0.0/0
       - proto: tcp
-        from_port: 4001
-        to_port: 4001
-        group_name: "{{ cluster_id }}-node"
+        from_port: 2379
+        to_port: 2379
+        group_name: "{{ cluster_id }}-master"
+      - proto: tcp
+        from_port: 2380
+        to_port: 2380
+        group_name: "{{ cluster_id }}-master"
       rules_egress:
       - proto: all
         cidr_ip: 0.0.0.0/0
