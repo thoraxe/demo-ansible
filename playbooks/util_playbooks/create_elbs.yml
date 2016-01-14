@@ -58,12 +58,19 @@
       security_group_ids: "{{ [infra_lb_sg.group_id] }}"
       listeners:
       - protocol: tcp
-        load_balancer_port: "{{ console_port }}"
-        instance_port: "{{ console_port }}"
+        load_balancer_port: 443
+        instance_port: 443
       - protocol: tcp
         load_balancer_port: 80
         instance_port: 80
-    register: infra_elb
+       health_check:
+        ping_protocol: tcp
+        ping_port: 443
+        response_timeout: 2
+        interval: 5
+        unhealthy_threshold: 2
+        healthy_threshold: 2
+   register: infra_elb
 
   - name: Create route53 entry for master internal elb
     route53:
