@@ -99,6 +99,10 @@
     command: "oadm router --default-cert={{ r53_wildcard_zone }}.pem --credentials=/etc/origin/master/openshift-router.kubeconfig --service-account=router --images='{{ router_image_url }}'"
     when: router_out | failed
 
+  - name: Scale router
+    command: "oc scale --replicas={{ num_infra_nodes }} dc router"
+    when: router_out | failed
+
   - name: Check whether a registry exists or not
     command: oadm registry --dry-run
     register: registry_out
