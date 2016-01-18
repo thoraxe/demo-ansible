@@ -42,7 +42,6 @@
         unhealthy_threshold: 2
         healthy_threshold: 2
       listeners:
-      listeners:
       - protocol: tcp
         load_balancer_port: "{{ console_port }}"
         instance_port: "{{ console_port }}"
