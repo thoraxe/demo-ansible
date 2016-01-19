@@ -6,7 +6,8 @@
   connection: local
   sudo: no
   vars:
-    infra_hosts: "{{ groups['tag_node-region_infra'] | intersect(groups['tag_env_' ~ cluster_id]) }}"
+    infra_hosts: "{{ groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
+                     | intersect(groups['tag_openshift-demo-' ~ cluster_id ~ '-node-type_infrastructure']) }}"
   tasks:
   - add_host:
       name: "{{ infra_hosts.0 }}"
@@ -18,7 +19,8 @@
   connection: local
   sudo: no
   vars:
-    demo_hosts: "{{ groups['tag_node-region_demo'] | intersect(groups['tag_env_' ~ cluster_id]) }}"
+    demo_hosts: "{{ groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
+                     | intersect(groups['tag_openshift-demo-' ~ cluster_id ~ '-node-type_application']) }}"
   tasks:
   - add_host:
       name: "{{ demo_hosts.0 }}"
@@ -98,6 +100,9 @@
   - name: Install router
     command: "oadm router --default-cert={{ r53_wildcard_zone }}.pem --credentials=/etc/origin/master/openshift-router.kubeconfig --service-account=router --images='{{ router_image_url }}'"
     when: router_out | failed
+
+  - pause:
+      seconds: 10
 
   - name: Scale router
     command: "oc scale --replicas={{ num_infra_nodes }} dc router"

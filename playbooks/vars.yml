@@ -55,14 +55,13 @@ os_defaults:
       root: 15
       docker: 25
       etcd: 25
-  regions:
-  - name: infra
+  infra_nodes:
     count: "{{ num_infra_nodes }}"
     instance_type: "{{ ec2_infra_instance_type }}"
     vol_sizes:
       root: 30
       docker: 25
-  - name: demo
+  app_nodes:
     count: "{{ num_app_nodes }}"
     instance_type: "{{ ec2_node_instance_type }}"
     vol_sizes:

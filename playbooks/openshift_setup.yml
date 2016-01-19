@@ -10,13 +10,8 @@
     when: cluster_id is not defined or ec2_region is not defined or ec2_image is not defined or ec2_keypair is not defined or ec2_master_instance_type is not defined or ec2_infra_instance_type is not defined or ec2_node_instance_type is not defined or r53_zone is not defined or r53_host_zone is not defined or r53_wildcard_zone is not defined or num_app_nodes is not defined or hexboard_size is not defined or rhsm_user is not defined or rhsm_pass is not defined or deployment_type is not defined
   - name: wait for ssh
     wait_for: "port=22 host={{ item }}"
-    with_items: groups['tag_env_' ~ cluster_id]
+    with_items: groups['tag_openshift-demo_' ~ cluster_id]
 
-# Register any un-registered hosts to rhsm
-- include: util_playbooks/register_host.yml
-
-# Yum repo configuration
-- include: util_playbooks/host_repos.yml
 
 # Add the created hosts to groups for configuration
 - hosts: localhost
@@ -30,18 +25,35 @@
       ansible_ssh_user: openshift
       ansible_sudo: yes
       name: "{{ item }}"
-      groups: masters, etcd
-    with_items: groups['tag_openshift-master_' ~ cluster_id]
+      groups: masters, etcd, nodes, cluster_hosts
+      openshift_node_labels:
+        region: master
+        zone: "{{ hostvars[item].ec2_placement }}"
+    with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_master']
 
   - add_host:
       ansible_ssh_user: openshift
       ansible_sudo: yes
       name: "{{ item }}"
-      groups: nodes
+      groups: nodes, cluster_hosts
       openshift_node_labels:
-        region: "{{ hostvars[item]['ec2_tag_node-region'] }}"
+        region: "{{ 'infra' if  hostvars[item]['ec2_tag_openshift-demo-' ~ cluster_id ~ '-node-type'] == 'infrastructure' else 'demo' }}"
         zone: "{{ hostvars[item].ec2_placement }}"
-    with_items: groups['tag_openshift-node_' ~ cluster_id]
+    with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
+
+  - debug: var=groups
+
+# Register any un-registered hosts to rhsm
+- include: util_playbooks/register_host.yml
+
+# Yum repo configuration
+- include: util_playbooks/host_repos.yml
+
+- hosts: cluster_hosts
+  tasks:
+  - command: mkdir -p /etc/origin
+  - command: touch /etc/origin/aws.conf
+
 
 # Configure the instances
 - include: ../../openshift-ansible/playbooks/byo/openshift-cluster/config.yml
@@ -52,10 +64,24 @@
     openshift_cluster_id: "{{ cluster_id }}"
     openshift_debug_level: "{{ debug_level }}"
     openshift_node_debug_level: "{{ node_debug_level | default(debug_level, true) }}"
+    openshift_master_controller_args:
+      cloud-provider:
+      - "aws"
+      cloud-config:
+      - "/etc/origin/aws.conf"
+    openshift_master_api_server_args:
+      cloud-provider:
+      - "aws"
+      cloud-config:
+      - "/etc/origin/aws.conf"
     openshift_node_kubelet_args:
       max-pods:
       - "100"
-    openshift_node_sdn_mtu: 1450
+      cloud-provider:
+      - "aws"
+      cloud-config:
+      - "/etc/origin/aws.conf"
+   #openshift_node_sdn_mtu: 1450
     openshift_master_debug_level: "{{ master_debug_level | default(debug_level, true) }}"
     openshift_master_access_token_max_seconds: 2419200
     openshift_master_identity_providers: "{{ identity_providers }}"
@@ -64,9 +90,9 @@
     osm_cluster_network_cidr: 10.0.0.0/8
     osm_host_subnet_length: 16
     osm_default_subdomain: "{{ r53_wildcard_zone }}"
-    osm_default_node_selector: "region={{ os_defaults.regions.1.name }}"
+    osm_default_node_selector: "region=demo"
     openshift_master_cluster_method: native
-    openshift_master_cluster_hostname: openshift-internal.{{ r53_host_zone }}
+    openshift_master_cluster_hostname: openshift.internal.{{ r53_host_zone }}
     openshift_master_cluster_public_hostname: openshift.{{ r53_host_zone }}
     os_firewall_enabled: False
 
