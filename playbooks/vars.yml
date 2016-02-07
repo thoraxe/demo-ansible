@@ -67,6 +67,11 @@ os_defaults:
     vol_sizes:
       root: 30
       docker: 25
+  hosted:
+    vol_sizes:
+      registry: 30
+      logging: 30
+      metrics: 30
 
 provider_defaults:
   ec2:

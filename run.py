@@ -14,10 +14,13 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 @click.command()
 @click.option('--cluster-id', default='demo', show_default=True,
               help='cluster identifier (used for assigning ec2 tags, naming security groups, and is used as a subdomain of the r53-zone for environment dns entries')
-@click.option('--num-nodes', type=click.IntRange(1,sys.maxint), default=1, help='Number of application nodes')
-@click.option('--num-infra', type=click.IntRange(1,3), default=1, help='Number of infrastructure nodes')
+@click.option('--num-nodes', type=click.INT, default=1, show_default=True,
+              help='Number of application nodes')
+@click.option('--num-infra', type=click.IntRange(1,3), default=1,
+              show_default=True, help='Number of infrastructure nodes')
 @click.option('--num-masters', type=click.IntRange(1,3), default=1,
-              help='Number of masters', callback=validate_masters)
+              show_default=True, help='Number of masters',
+              callback=validate_masters)
 @click.option('--hexboard-size', type=click.Choice(hexboard_sizes),
               help='Hexboard size (nodes tiny=32, xsmall=64, small=108, medium=266, large=512, xlarge=1026)',
               show_default=True)

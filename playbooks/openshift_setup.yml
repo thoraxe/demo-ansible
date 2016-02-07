@@ -12,15 +12,6 @@
     wait_for: "port=22 host={{ item }}"
     with_items: groups['tag_openshift-demo_' ~ cluster_id]
 
-
-# Add the created hosts to groups for configuration
-- hosts: localhost
-  connection: local
-  sudo: no
-  gather_facts: no
-  vars_files:
-  - vars.yml
-  tasks:
   - add_host:
       ansible_ssh_user: openshift
       ansible_sudo: yes
@@ -41,10 +32,10 @@
         zone: "{{ hostvars[item].ec2_placement }}"
     with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
 
-  - debug: var=groups
 
 # Register any un-registered hosts to rhsm
 - include: util_playbooks/register_host.yml
+
 
 # Yum repo configuration
 - include: util_playbooks/host_repos.yml
@@ -52,7 +43,11 @@
 - hosts: cluster_hosts
   tasks:
   - command: mkdir -p /etc/origin
-  - command: touch /etc/origin/aws.conf
+  - ini_file:
+      dest: /etc/origin/aws.conf
+      section: Global
+      option: Zone
+      value: "{{ hostvars[item].ec2_placement }}"
 
 
 # Configure the instances
@@ -64,12 +59,12 @@
     openshift_cluster_id: "{{ cluster_id }}"
     openshift_debug_level: "{{ debug_level }}"
     openshift_node_debug_level: "{{ node_debug_level | default(debug_level, true) }}"
-    openshift_master_controller_args:
+    osm_controller_args:
       cloud-provider:
       - "aws"
       cloud-config:
       - "/etc/origin/aws.conf"
-    openshift_master_api_server_args:
+    osm_api_server_args:
       cloud-provider:
       - "aws"
       cloud-config:

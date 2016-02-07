@@ -23,7 +23,8 @@
     "NumSubnets": {
       "Type": "Number",
       "MinValue": "1",
-      "MaxValue": "4"
+      "MaxValue": "4",
+      "Default": "1"
     },
     "SubnetAvailabilityZones": {
       "Type": "List<AWS::EC2::AvailabilityZone::Name>"
@@ -35,7 +36,8 @@
       "Type": "AWS::EC2::KeyPair::KeyName"
     },
     "MasterInstanceType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "t2.medium"
     },
     "MasterImageId": {
       "Type": "AWS::EC2::Image::Id"
@@ -44,25 +46,32 @@
       "Type": "String"
     },
     "MasterRootVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "30"
     },
     "MasterDockerVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "25"
     },
     "MasterEtcdVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "25"
     },
     "MasterEtcdVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "MasterDockerVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "MasterRootVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "InfraInstanceType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "t2.medium"
     },
     "InfraImageId": {
       "Type": "AWS::EC2::Image::Id"
@@ -71,19 +80,24 @@
       "Type": "String"
     },
     "InfraRootVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "30"
     },
     "InfraDockerVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "25"
     },
     "InfraDockerVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "InfraRootVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "NodeInstanceType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "t2.medium"
     },
     "NodeImageId": {
       "Type": "AWS::EC2::Image::Id"
@@ -92,28 +106,35 @@
       "Type": "String"
     },
     "NodeRootVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "30"
     },
     "NodeDockerVolSize": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "25"
     },
     "NodeDockerVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "NodeRootVolType": {
-      "Type": "String"
+      "Type": "String",
+      "Default": "gp2"
     },
     "NumMasters": {
       "Type": "Number",
-      "AllowedValues": ["1", "3"]
+      "AllowedValues": ["1", "3"],
+      "Default": "1"
     },
     "NumInfra": {
       "Type": "Number",
-      "MinValue": "1"
+      "MinValue": "1",
+      "Default": "1"
     },
     "NumNodes": {
       "Type": "Number",
-      "MinValue": "1"
+      "MinValue": "1",
+      "Default": "1"
     }
   },
   "Conditions": {
