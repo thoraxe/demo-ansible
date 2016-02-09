@@ -47,7 +47,7 @@
       dest: /etc/origin/aws.conf
       section: Global
       option: Zone
-      value: "{{ hostvars[item].ec2_placement }}"
+      value: "{{ ec2_placement }}"
 
 
 # Configure the instances
