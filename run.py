@@ -148,9 +148,9 @@ def launch_demo_env(num_nodes,
         sys.exit(0)
 
     if run_only_smoke_tests:
-        playbooks = ['projects_setup.yaml']
+        playbooks = ['projects_setup.yml']
     else:
-        playbooks = ['bootstrap.yml', 'openshift_setup.yml', 'projects_setup.yaml']
+        playbooks = ['bootstrap.yml', 'openshift_setup.yml', 'projects_setup.yml']
 
     for playbook in playbooks:
         # refresh the inventory cache to prevent stale hosts from
