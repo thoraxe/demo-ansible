@@ -162,14 +162,14 @@ def launch_demo_env(num_nodes,
         command='rm -rf .ansible/cached_facts'
         os.system(command)
 
-    command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s ec2_region=%s ec2_image=%s ec2_keypair=%s ec2_master_instance_type=%s ec2_infra_instance_type=%s ec2_node_instance_type=%s r53_zone=%s r53_host_zone=%s r53_wildcard_zone=%s console_port=%s api_port=%s num_app_nodes=%s num_infra_nodes=%s num_masters=%s hexboard_size=%s deployment_type=%s rhsm_user=%s rhsm_pass=%s skip_subscription_management=%s use_certificate_repos=%s certificate_file=%s certificate_key=%s run_smoke_tests=%s run_only_smoke_tests=%s num_smoke_test_users=%s default_password=%s\' playbooks/%s' % (cluster_id, region, ami, keypair, master_instance_type, infra_instance_type, node_instance_type, r53_zone, host_zone, wildcard_zone, console_port, api_port, num_nodes, num_infra, num_masters, hexboard_size, deployment_type, rhsm_user, rhsm_pass, skip_subscription_management, use_certificate_repos, certificate_file, certificate_key, run_smoke_tests, run_only_smoke_tests, num_smoke_test_users, default_password, playbooks)
+        command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s ec2_region=%s ec2_image=%s ec2_keypair=%s ec2_master_instance_type=%s ec2_infra_instance_type=%s ec2_node_instance_type=%s r53_zone=%s r53_host_zone=%s r53_wildcard_zone=%s console_port=%s api_port=%s num_app_nodes=%s num_infra_nodes=%s num_masters=%s hexboard_size=%s deployment_type=%s rhsm_user=%s rhsm_pass=%s skip_subscription_management=%s use_certificate_repos=%s certificate_file=%s certificate_key=%s run_smoke_tests=%s run_only_smoke_tests=%s num_smoke_test_users=%s default_password=%s\' playbooks/%s' % (cluster_id, region, ami, keypair, master_instance_type, infra_instance_type, node_instance_type, r53_zone, host_zone, wildcard_zone, console_port, api_port, num_nodes, num_infra, num_masters, hexboard_size, deployment_type, rhsm_user, rhsm_pass, skip_subscription_management, use_certificate_repos, certificate_file, certificate_key, run_smoke_tests, run_only_smoke_tests, num_smoke_test_users, default_password, playbooks)
 
-    if verbose > 0:
-        command += " -" + "".join(['v']*verbose)
+        if verbose > 0:
+            command += " -" + "".join(['v']*verbose)
 
-    status = os.system(command)
-    if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
-        return os.WEXITSTATUS(status)
+        status = os.system(command)
+        if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
+            return os.WEXITSTATUS(status)
 
 if __name__ == '__main__':
     launch_demo_env(auto_envvar_prefix='OSE_DEMO')
