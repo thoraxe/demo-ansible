@@ -42,8 +42,10 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               show_default=True)
 @click.option('--deployment-type', default='openshift-enterprise', help='openshift deployment type',
               show_default=True)
-@click.option('--console-port', default=443, type=click.IntRange(1,65535),
-              help='OpenShift console/api port')
+@click.option('--console-port', default='8443', type=click.IntRange(1,65535), help='OpenShift web console port',
+              show_default=True)
+@click.option('--api-port', default='8443', type=click.IntRange(1,65535), help='OpenShift API port',
+              show_default=True)
 @click.option('--rhsm-user', prompt=True, help='Red Hat Subscription Management User')
 @click.option('--rhsm-pass', prompt=True, hide_input=True,
               help='Red Hat Subscription Management Password')
