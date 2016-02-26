@@ -4,6 +4,9 @@
     "VpcCidrBlock": {
       "Type": "String"
     },
+    "VpcName": {
+      "Type": "String"
+    },
     "MasterApiPort": {
       "Type": "Number",
       "Default": "8443"
@@ -153,7 +156,8 @@
       "Properties": {
         "CidrBlock": { "Ref": "VpcCidrBlock" },
         "EnableDnsSupport": "true",
-        "EnableDnsHostnames": "true"
+        "EnableDnsHostnames": "true",
+        "Tags": [ { "Key": "Name", "Value": { "Ref": "VpcName" } } ]
       }
     },
     "VpcInternetGateway": {

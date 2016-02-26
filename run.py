@@ -42,13 +42,21 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               show_default=True)
 @click.option('--deployment-type', default='openshift-enterprise', help='openshift deployment type',
               show_default=True)
-@click.option('--console-port', default=443, type=click.IntRange(1,65535),
-              help='OpenShift console/api port')
+@click.option('--console-port', default='8443', type=click.IntRange(1,65535), help='OpenShift web console port',
+              show_default=True)
+@click.option('--api-port', default='8443', type=click.IntRange(1,65535), help='OpenShift API port',
+              show_default=True)
 @click.option('--rhsm-user', prompt=True, help='Red Hat Subscription Management User')
 @click.option('--rhsm-pass', prompt=True, hide_input=True,
               help='Red Hat Subscription Management Password')
 @click.option('--skip-subscription-management', is_flag=True,
               help='Skip subscription management steps')
+@click.option('--use-certificate-repos', is_flag=True,
+              help='Uses certificate-based yum repositories for the AOS content. Requires providing paths to local certificate key and pem files.')
+@click.option('--certificate-file', help='Certificate file for the yum repository',
+              show_default=True)
+@click.option('--certificate-key', help='Certificate key for the yum repository',
+              show_default=True)
 @click.option('--no-confirm', is_flag=True,
               help='Skip confirmation prompt')
 @click.option('--run-smoke-tests', is_flag=True, help='Run workshop smoke tests')
@@ -59,15 +67,34 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               help='password for all users', show_default=True)
 @click.help_option('--help', '-h')
 @click.option('-v', '--verbose', count=True)
-def launch_demo_env(num_nodes, num_infra, num_masters, hexboard_size=None,
-                    region=None, ami=None, no_confirm=False,
-                    master_instance_type=None, node_instance_type=None,
-                    infra_instance_type=None, keypair=None, r53_zone=None,
-                    cluster_id=None, app_dns_prefix=None, console_port=443,
-                    deployment_type=None, rhsm_user=None, rhsm_pass=None,
-                    skip_subscription_management=False, run_smoke_tests=False,
-                    num_smoke_test_users=None, run_only_smoke_tests=False,
-                    default_password=None, verbose=0):
+def launch_demo_env(num_nodes, 
+                    num_infra, 
+                    num_masters, 
+                    hexboard_size=None,
+                    region=None, 
+                    ami=None, 
+                    no_confirm=False,
+                    master_instance_type=None, 
+                    node_instance_type=None,
+                    infra_instance_type=None, 
+                    keypair=None, 
+                    r53_zone=None,
+                    cluster_id=None, 
+                    app_dns_prefix=None,
+                    deployment_type=None, 
+                    console_port=443, 
+                    api_port=443,
+                    rhsm_user=None, 
+                    rhsm_pass=None,
+                    skip_subscription_management=False, 
+                    certificate_file=None,
+                    certificate_key=None,
+                    use_certificate_repos=False,
+                    run_smoke_tests=False,
+                    num_smoke_test_users=None, 
+                    run_only_smoke_tests=False,
+                    default_password=None, 
+                    verbose=0):
     click.echo('Configured values:')
     click.echo('\tcluster_id: %s' % cluster_id)
     click.echo('\tnodes: %s' % num_nodes)
@@ -108,6 +135,8 @@ def launch_demo_env(num_nodes, num_infra, num_masters, hexboard_size=None,
     click.echo('Host DNS entries will be created under the %s domain' % host_zone)
     click.echo('Application wildcard zone for this env will be %s' % wildcard_zone)
 
+    if use_certificate_repos:
+        click.echo('Certificate file %s and certificate key %s will be used for the yum repos' % (certificate_file, certificate_key))
 
     if run_smoke_tests or run_only_smoke_tests:
         click.echo('Smoke tests will be run following environment creation with %s users with password %s' % (num_smoke_test_users, default_password))
@@ -119,21 +148,28 @@ def launch_demo_env(num_nodes, num_infra, num_masters, hexboard_size=None,
         sys.exit(0)
 
     if run_only_smoke_tests:
-        playbooks = ['projects_setup.yaml']
+        playbooks = ['projects_setup.yml']
     else:
-        playbooks = ['bootstrap.yml', 'openshift_setup.yml', 'projects_setup.yaml']
+        playbooks = ['bootstrap.yml', 'openshift_setup.yml', 'projects_setup.yml']
 
     for playbook in playbooks:
+
+        # hide cache output unless in verbose mode
+        devnull='> /dev/null'
+
+        if verbose > 0:
+          devnull=''
+
         # refresh the inventory cache to prevent stale hosts from
         # interferring with re-running
-        command='inventory/aws/hosts/ec2.py --refresh-cache'
+        command='inventory/aws/hosts/ec2.py --refresh-cache %s' % (devnull)
         os.system(command)
 
         # remove any cached facts to prevent stale data during a re-run
         command='rm -rf .ansible/cached_facts'
         os.system(command)
 
-        command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s ec2_region=%s ec2_image=%s ec2_keypair=%s ec2_master_instance_type=%s ec2_infra_instance_type=%s ec2_node_instance_type=%s r53_zone=%s r53_host_zone=%s r53_wildcard_zone=%s num_app_nodes=%s num_infra_nodes=%s console_port=%s num_masters=%s hexboard_size=%s deployment_type=%s rhsm_user=%s rhsm_pass=%s skip_subscription_management=%s run_smoke_tests=%s num_smoke_test_users=%s default_password=%s\' playbooks/%s' % (cluster_id, region, ami, keypair, master_instance_type, infra_instance_type, node_instance_type, r53_zone, host_zone, wildcard_zone, num_nodes, num_infra, console_port, num_masters, hexboard_size, deployment_type, rhsm_user, rhsm_pass, skip_subscription_management, run_smoke_tests, num_smoke_test_users, default_password, playbook)
+        command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s ec2_region=%s ec2_image=%s ec2_keypair=%s ec2_master_instance_type=%s ec2_infra_instance_type=%s ec2_node_instance_type=%s r53_zone=%s r53_host_zone=%s r53_wildcard_zone=%s console_port=%s api_port=%s num_app_nodes=%s num_infra_nodes=%s num_masters=%s hexboard_size=%s deployment_type=%s rhsm_user=%s rhsm_pass=%s skip_subscription_management=%s use_certificate_repos=%s certificate_file=%s certificate_key=%s run_smoke_tests=%s run_only_smoke_tests=%s num_smoke_test_users=%s default_password=%s\' playbooks/%s' % (cluster_id, region, ami, keypair, master_instance_type, infra_instance_type, node_instance_type, r53_zone, host_zone, wildcard_zone, console_port, api_port, num_nodes, num_infra, num_masters, hexboard_size, deployment_type, rhsm_user, rhsm_pass, skip_subscription_management, use_certificate_repos, certificate_file, certificate_key, run_smoke_tests, run_only_smoke_tests, num_smoke_test_users, default_password, playbook)
 
         if verbose > 0:
             command += " -" + "".join(['v']*verbose)

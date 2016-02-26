@@ -93,5 +93,3 @@
 
 # Router, Registry, internal users and projects, priming
 - include: util_playbooks/post_setup.yml
-
-- include: projects_setup.yml
