@@ -153,9 +153,16 @@ def launch_demo_env(num_nodes,
         playbooks = ['bootstrap.yml', 'openshift_setup.yml', 'projects_setup.yml']
 
     for playbook in playbooks:
+
+        # hide cache output unless in verbose mode
+        devnull='> /dev/null'
+
+        if verbose > 0:
+          devnull=''
+
         # refresh the inventory cache to prevent stale hosts from
         # interferring with re-running
-        command='inventory/aws/hosts/ec2.py --refresh-cache'
+        command='inventory/aws/hosts/ec2.py --refresh-cache %s' % (devnull)
         os.system(command)
 
         # remove any cached facts to prevent stale data during a re-run
