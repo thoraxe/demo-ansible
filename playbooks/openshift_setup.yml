@@ -94,11 +94,4 @@
 # Router, Registry, internal users and projects, priming
 - include: util_playbooks/post_setup.yml
 
-# Smoke projects
-- name: Setting up smoke projects...
-  hosts: oo_first_master
-  vars_files:
-  - vars.yml
-  tasks:
-  - include: tasks/smoke_projects.yml
-    when: run_smoke_tests | bool
+- include: projects_setup.yml
