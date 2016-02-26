@@ -16,12 +16,12 @@
   - name: Copy Atomic OpenShift yum repository certificate
     copy:
       src: '{{ certificate_file }}'
-      dest: /var/lib/yum/
+      dest: /var/lib/yum/client-cert.pem
     when: use_certificate_repos
   
   - name: Copy Atomic OpenShift yum repository key
     copy:
       src: '{{ certificate_key }}'
-      dest: /var/lib/yum/
+      dest: /var/lib/yum/client-key.pem
     when: use_certificate_repos
 
