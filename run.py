@@ -101,10 +101,9 @@ def launch_demo_env(num_nodes,
     click.echo('\tinfra nodes: %s' % num_infra)
     click.echo('\tmasters: %s' % num_masters)
     click.echo('\tconsole port: %s' % console_port)
+    click.echo('\tapi port: %s' % api_port)
 
-    if hexboard_size is not None:
-        click.echo("hexboard size is: %s" % hexboard_size)
-    elif num_nodes <= 1:
+    if num_nodes <= 1:
         hexboard_size = 'tiny'
     elif num_nodes < 3:
         hexboard_size = 'xsmall'
