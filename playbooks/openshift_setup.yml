@@ -58,7 +58,6 @@
 # Register any un-registered hosts to rhsm
 - include: util_playbooks/register_host.yml
 
-
 # Yum repo configuration
 - include: util_playbooks/host_repos.yml
 
@@ -72,7 +71,6 @@
       section: Global
       option: Zone
       value: "{{ ec2_placement }}"
-
 
 # Configure the instances
 - include: ../../openshift-ansible/playbooks/byo/openshift-cluster/config.yml
