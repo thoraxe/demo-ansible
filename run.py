@@ -157,7 +157,7 @@ def launch_demo_env(num_nodes,
         devnull='> /dev/null'
 
         if verbose > 0:
-          devnull=''
+            devnull=''
 
         # refresh the inventory cache to prevent stale hosts from
         # interferring with re-running
