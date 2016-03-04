@@ -27,7 +27,7 @@
 - name: Verify node host groups have core ansible facts
   hosts: oo_infra_nodes:oo_demo_nodes
 
-- name: Node post config
+- name: Node post configuration
   hosts: oo_nodes_to_config
   vars_files:
   - ../vars.yml
@@ -48,7 +48,7 @@
     command: "docker pull {{ item }}"
     with_items: preload_images
 
-- name: Master auth config
+- name: User creation
   hosts: oo_masters_to_config
   vars_files:
   - ../vars.yml
@@ -57,7 +57,7 @@
     command: "htpasswd -b /etc/origin/master/htpasswd {{ item.user }} {{ default_password }}"
     with_items: users
 
-- name: First master post config
+- name: Initial environment configuration
   hosts: oo_first_master
   vars_files:
   - ../vars.yml
@@ -116,6 +116,11 @@
     command: "oadm registry --credentials=/etc/origin/master/openshift-registry.kubeconfig --images='{{ registry_image_url }}'"
     when: registry_out | failed
 
+- name: Demonstration project configuration
+  hosts: oo_first_master
+  vars_files:
+  - ../vars.yml
+  tasks:
   - name: Find current projects list
     command: oc get projects
     register: projects
