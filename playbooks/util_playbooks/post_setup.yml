@@ -69,7 +69,8 @@
       region: demo
     default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
   tasks:
-  - command: oc project default
+  - name: Switch to default project
+    command: oc project default
 
   - name: Set nodeselector for the default project to be region=infra
     shell: "oc get namespace default -o yaml  | sed -e '/  annotations:/a\\    openshift.io/node-selector: region=infra' | oc replace -f -"
@@ -124,38 +125,48 @@
     when: item.project not in projects.stdout
     with_items: users
 
-  - command: oc project default
+  - name: Switch to default project
+    command: oc project default
 
-  - command: oc get dc -n {{ hexboard.namespace }}
+  - name: Retrieve hexboard deployment configurations
+    command: oc get dc -n {{ hexboard.namespace }}
     register: dcs_out
     failed_when: "hexboard.name not in dcs_out"
     ignore_errors: true
 
-  - command: oc login -u {{ users.0.user }} -p {{ default_password }} --certificate-authority=/etc/origin/master/ca.crt
+  - name: Login as the demo user
+    command: oc login -u {{ users.0.user }} -p {{ default_password }} --certificate-authority=/etc/origin/master/ca.crt
     when: dcs_out | failed
 
-  - script: ../files/get_token.sh
+  - name: "Get the demo user's token"
+    script: ../files/get_token.sh
     register: auth_token
     when: dcs_out | failed
 
-  - set_fact:
+  - name: Set the token as a fact
+    set_fact:
       access_token: "{{ auth_token.stdout }}"
     when: dcs_out | failed
 
-  - command: oc project {{ hexboard.namespace }}
+  - name: Switch to the hexboard project
+    command: oc project {{ hexboard.namespace }}
     when: dcs_out | failed
 
-  - template:
+  - name: Install the hexboard template file on the master
+    template:
       dest: /root/hexboard_template.json
       src: ../templates/hexboard_template.json.j2
     when: dcs_out | failed
 
-  - command: oc create -f /root/hexboard_template.json
+  - name: Create the objects in the hexboard template
+    command: oc create -f /root/hexboard_template.json
     when: dcs_out | failed
     ignore_errors: true
 
-  - command: oc start-build {{ hexboard.name }}
+  - name: Start the hexboard build
+    command: oc start-build {{ hexboard.name }}
     when: dcs_out | failed
 
-  - command: "oc config use-context {{ default_context }}"
+  - name: Change the oc context
+    command: "oc config use-context {{ default_context }}"
     when: dcs_out | failed
