@@ -110,6 +110,7 @@
     osm_host_subnet_length: 16
     osm_default_subdomain: "{{ r53_wildcard_zone }}"
     osm_default_node_selector: "region=demo"
+    osm_use_cockpit: false
     openshift_master_cluster_method: native
     openshift_master_cluster_hostname: openshift.internal.{{ r53_host_zone }}
     openshift_master_cluster_public_hostname: openshift.{{ r53_host_zone }}
