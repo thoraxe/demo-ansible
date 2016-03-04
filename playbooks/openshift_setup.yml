@@ -5,14 +5,16 @@
   sudo: no
   gather_facts: no
   tasks:
-  - fail:
+  - name: 'Validating options...'
+    fail:
       msg: required values not set
     when: cluster_id is not defined or ec2_region is not defined or ec2_image is not defined or ec2_keypair is not defined or ec2_master_instance_type is not defined or ec2_infra_instance_type is not defined or ec2_node_instance_type is not defined or r53_zone is not defined or r53_host_zone is not defined or r53_wildcard_zone is not defined or num_app_nodes is not defined or hexboard_size is not defined or rhsm_user is not defined or rhsm_pass is not defined or deployment_type is not defined
   - name: wait for ssh
     wait_for: "port=22 host={{ item }}"
     with_items: groups['tag_openshift-demo_' ~ cluster_id]
 
-  - add_host:
+  - name: Add masters to requisite groups
+    add_host:
       ansible_ssh_user: openshift
       ansible_sudo: yes
       name: "{{ item }}"
@@ -22,7 +24,8 @@
         zone: "{{ hostvars[item].ec2_placement }}"
     with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_master']
 
-  - add_host:
+  - name: Add nodes to requisite groups
+    add_host:
       ansible_ssh_user: openshift
       ansible_sudo: yes
       name: "{{ item }}"
@@ -31,7 +34,6 @@
         region: "{{ 'infra' if  hostvars[item]['ec2_tag_openshift-demo-' ~ cluster_id ~ '-node-type'] == 'infrastructure' else 'demo' }}"
         zone: "{{ hostvars[item].ec2_placement }}"
     with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
-
 
 # Register any un-registered hosts to rhsm
 - include: util_playbooks/register_host.yml
