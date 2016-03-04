@@ -38,6 +38,7 @@
         zone: "{{ hostvars[item].ec2_placement }}"
     with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
 
+# The master DNS entry is used because it's valuable to have an easy hostname to SSH into
 - name: Configure master DNS entry
   hosts: project_master
   gather_facts: yes
@@ -63,8 +64,10 @@
 
 - hosts: cluster_hosts
   tasks:
-  - command: mkdir -p /etc/origin
-  - ini_file:
+  - name: Create /etc/origin directory
+    command: mkdir -p /etc/origin
+  - name: Create aws.conf ini file
+    ini_file:
       dest: /etc/origin/aws.conf
       section: Global
       option: Zone
