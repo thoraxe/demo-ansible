@@ -116,6 +116,21 @@
     command: "oadm registry --credentials=/etc/origin/master/openshift-registry.kubeconfig --images='{{ registry_image_url }}'"
     when: registry_out | failed
 
+    #- name: Storage configuration for registry
+    #  hosts: oo_first_master
+    #  vars_files:
+    #  - ../vars.yml
+    #  tasks:
+    #  - name: Create EBS volume for registry
+    #
+    #  - name: Create PV for registry EBS volume
+    #
+    #  - name: Switch to default project
+    #
+    #  - name: Create PVC for registry EBS volume in default project
+    #
+    #  - name: Attach registry with EBS PVC
+
 - name: Demonstration project configuration
   hosts: oo_first_master
   vars_files:
