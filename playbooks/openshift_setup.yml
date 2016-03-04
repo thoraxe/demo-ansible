@@ -1,8 +1,9 @@
 # vim: set ft=ansible:
 ---
-- hosts: localhost
+- name: 'Initial setup of groups'
+  hosts: localhost
   connection: local
-  sudo: no
+  become: no
   gather_facts: no
   tasks:
   - name: 'Validating options...'
@@ -15,8 +16,6 @@
 
   - name: Add masters to requisite groups
     add_host:
-      ansible_ssh_user: openshift
-      ansible_sudo: yes
       name: "{{ item }}"
       groups: masters, etcd, nodes, cluster_hosts
       openshift_node_labels:
@@ -24,10 +23,14 @@
         zone: "{{ hostvars[item].ec2_placement }}"
     with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_master']
 
+  - name: Create group for first master
+    add_host:
+      name: "{{ item }}"
+      groups: project_master
+    with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_master'].0
+
   - name: Add nodes to requisite groups
     add_host:
-      ansible_ssh_user: openshift
-      ansible_sudo: yes
       name: "{{ item }}"
       groups: nodes, cluster_hosts
       openshift_node_labels:
@@ -35,6 +38,22 @@
         zone: "{{ hostvars[item].ec2_placement }}"
     with_items: groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node']
 
+- name: Configure master DNS entry
+  hosts: project_master
+  gather_facts: yes
+  become: no
+  tasks:
+  - name: Route53 entry for master
+    route53:
+      command: create
+      zone: "{{ r53_zone }}"
+      record: "openshift-master.{{ r53_host_zone }}"
+      ttl: 60
+      type: A
+      value: "{{ hostvars[groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_master'].0]['ec2_ip_address'] }}"
+      overwrite: yes
+    delegate_to: localhost
+    
 # Register any un-registered hosts to rhsm
 - include: util_playbooks/register_host.yml
 
