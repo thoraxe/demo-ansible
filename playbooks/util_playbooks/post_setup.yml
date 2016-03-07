@@ -16,7 +16,7 @@
     register: kube_svc_ip_local
   - name: Set the kubernetes service IP fact
     set_fact:
-      kube_svc_ip: "{{ kube_svc_ip_local }}"
+      kube_svc_ip: "{{ kube_svc_ip_local.stdout }}"
 
 - name: Node post configuration
   hosts: nodes
@@ -60,7 +60,11 @@
       name: sketchproxy
       project: default
       region: demo
+    default_context: 'default/openshift-internal-{{ r53_host_zone  | regex_replace("\.", "-") }}:{{ api_port }}/system:admin'
   tasks:
+  - name: Change the oc context
+    command: "oc config use-context {{ default_context }}"
+
   - name: Switch to default project
     command: oc project default
 
@@ -128,7 +132,7 @@
 - name: Demonstration project configuration
   hosts: project_master
   vars:
-    default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
+    default_context: 'default/openshift-internal-{{ r53_host_zone  | regex_replace("\.", "-") }}:{{ api_port }}/system:admin'
   vars_files:
   - ../vars.yml
   tasks:
