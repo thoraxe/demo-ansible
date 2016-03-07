@@ -5,7 +5,18 @@
   gather_facts: no
   connection: local
   become: no
-  - include: tasks/group_setup.yml
+  tasks:
+  - include: ../tasks/group_setup.yml
+
+- name: Gather environment information
+  hosts: project_master
+  tasks:
+  - name: Determine kubernetes service IP
+    shell: "oc get service kubernetes -o yaml | grep clusterIP | awk '{print $2}'"
+    register: kube_svc_ip_local
+  - name: Set the kubernetes service IP fact
+    set_fact:
+      kube_svc_ip: "{{ kube_svc_ip_local }}"
 
 - name: Node post configuration
   hosts: nodes
@@ -16,13 +27,13 @@
     lineinfile:
       dest: /etc/resolv.conf
       insertbefore: ^nameserver 172.18.*$
-      line: nameserver {{ hostvars[groups.oo_first_master.0].openshift.common.dns_ip | default('172.30.0.1') }}
+      line: nameserver {{ hostvars[groups.project_master.0].kube_svc_ip }}
       state: present
 
   - name: Configure eth0 dhclient
     lineinfile:
       dest: /etc/dhcp/dhclient-eth0.conf
-      line: prepend domain-name-servers {{ hostvars[groups.oo_first_master.0].openshift.common.dns_ip | default('172.30.0.1') }}
+      line: prepend domain-name-servers {{ hostvars[groups.project_master.0].kube_svc_ip }}
       state: present
       create: yes
 
