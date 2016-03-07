@@ -1,3 +1,4 @@
+# vim: set ft=ansible:
 - name: Add masters to requisite groups
   add_host:
     name: "{{ item }}"

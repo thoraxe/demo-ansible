@@ -1,34 +1,14 @@
 # vim: set ft=ansible:
 ---
-- name: Create group for infra hosts in this env only
+- name: Setup groups
   hosts: localhost
   gather_facts: no
   connection: local
   become: no
-  vars:
-    infra_hosts: "{{ groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node'] | intersect(groups['tag_openshift-demo-' ~ cluster_id ~ '-node-type_infrastructure']) }}"
-  tasks:
-  - add_host:
-      name: "{{ infra_hosts.0 }}"
-      groups: oo_infra_nodes
-
-- name: Create group for demo hosts in this env only
-  hosts: localhost
-  gather_facts: no
-  connection: local
-  become: no
-  vars:
-    demo_hosts: "{{ groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node'] | intersect(groups['tag_openshift-demo-' ~ cluster_id ~ '-node-type_application']) }}"
-  tasks:
-  - add_host:
-      name: "{{ demo_hosts.0 }}"
-      groups: oo_demo_nodes
-
-- name: Verify node host groups have core ansible facts
-  hosts: oo_infra_nodes:oo_demo_nodes
+  - include: tasks/group_setup.yml
 
 - name: Node post configuration
-  hosts: oo_nodes_to_config
+  hosts: nodes
   vars_files:
   - ../vars.yml
   tasks:
@@ -51,7 +31,7 @@
     with_items: preload_images
 
 - name: User creation
-  hosts: oo_masters_to_config
+  hosts: masters
   vars_files:
   - ../vars.yml
   tasks:
@@ -60,7 +40,7 @@
     with_items: users
 
 - name: Initial environment configuration
-  hosts: oo_first_master
+  hosts: project_master
   vars_files:
   - ../vars.yml
   vars:
@@ -135,7 +115,7 @@
     #  - name: Attach registry with EBS PVC
 
 - name: Demonstration project configuration
-  hosts: oo_first_master
+  hosts: project_master
   vars:
     default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
   vars_files:
