@@ -4,7 +4,7 @@
   hosts: localhost
   gather_facts: no
   connection: local
-  sudo: no
+  become: no
   vars:
     infra_hosts: "{{ groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node'] | intersect(groups['tag_openshift-demo-' ~ cluster_id ~ '-node-type_infrastructure']) }}"
   tasks:
@@ -16,7 +16,7 @@
   hosts: localhost
   gather_facts: no
   connection: local
-  sudo: no
+  become: no
   vars:
     demo_hosts: "{{ groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_node'] | intersect(groups['tag_openshift-demo-' ~ cluster_id ~ '-node-type_application']) }}"
   tasks:
