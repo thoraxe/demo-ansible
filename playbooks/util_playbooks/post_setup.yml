@@ -69,7 +69,6 @@
       name: sketchproxy
       project: default
       region: demo
-    default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
   tasks:
   - name: Switch to default project
     command: oc project default
@@ -102,7 +101,9 @@
     command: "oadm router --default-cert={{ r53_wildcard_zone }}.pem --credentials=/etc/origin/master/openshift-router.kubeconfig --service-account=router --images='{{ router_image_url }}'"
     when: router_out | failed
 
-  - pause:
+  # we should probably do some kind of actual check for router deployment
+  - name: Wait for router to deploy
+    pause:
       seconds: 10
 
   - name: Scale router
@@ -135,6 +136,8 @@
 
 - name: Demonstration project configuration
   hosts: oo_first_master
+  vars:
+    default_context: 'default/{{ openshift.master.cluster_hostname | regex_replace("\.", "-") }}:{{ openshift.master.api_port }}/system:admin'
   vars_files:
   - ../vars.yml
   tasks:
