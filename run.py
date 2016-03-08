@@ -65,6 +65,8 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 @click.option('--run-only-smoke-tests', is_flag=True, help='Run only the workshop smoke tests')
 @click.option('--default-password', default='openshift3',
               help='password for all users', show_default=True)
+@click.option('--debug-playbook', 
+              help='Specify a path to a specific playbook to debug with all vars')
 @click.help_option('--help', '-h')
 @click.option('-v', '--verbose', count=True)
 def launch_demo_env(num_nodes, 
@@ -94,6 +96,7 @@ def launch_demo_env(num_nodes,
                     num_smoke_test_users=None, 
                     run_only_smoke_tests=False,
                     default_password=None, 
+                    debug_playbook=None,
                     verbose=0):
     click.echo('Configured values:')
     click.echo('\tcluster_id: %s' % cluster_id)
@@ -146,13 +149,18 @@ def launch_demo_env(num_nodes,
     if run_only_smoke_tests:
         click.echo('Only smoke tests will be run.')
 
+    if debug_playbook:
+        click.echo('We will debug the following playbook: %s' % (debug_playbook))
+
     if not no_confirm and not click.confirm('Continue using these values?'):
         sys.exit(0)
 
-    if run_only_smoke_tests:
-        playbooks = ['projects_setup.yml']
+    if debug_playbook:
+        playbooks = [debug_playbook]
+    elif run_only_smoke_tests:
+        playbooks = ['playbooks/projects_setup.yml']
     else:
-        playbooks = ['bootstrap.yml', 'openshift_setup.yml', 'projects_setup.yml']
+        playbooks = ['playbooks/bootstrap.yml', 'playbooks/openshift_setup.yml', 'playbooks/projects_setup.yml']
 
     for playbook in playbooks:
 
@@ -171,7 +179,61 @@ def launch_demo_env(num_nodes,
         command='rm -rf .ansible/cached_facts'
         os.system(command)
 
-        command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s ec2_region=%s ec2_image=%s ec2_keypair=%s ec2_master_instance_type=%s ec2_infra_instance_type=%s ec2_node_instance_type=%s r53_zone=%s r53_host_zone=%s r53_wildcard_zone=%s console_port=%s api_port=%s num_app_nodes=%s num_infra_nodes=%s num_masters=%s hexboard_size=%s deployment_type=%s rhsm_user=%s rhsm_pass=%s skip_subscription_management=%s use_certificate_repos=%s certificate_file=%s certificate_key=%s run_smoke_tests=%s run_only_smoke_tests=%s num_smoke_test_users=%s default_password=%s\' playbooks/%s' % (cluster_id, region, ami, keypair, master_instance_type, infra_instance_type, node_instance_type, r53_zone, host_zone, wildcard_zone, console_port, api_port, num_nodes, num_infra, num_masters, hexboard_size, deployment_type, rhsm_user, rhsm_pass, skip_subscription_management, use_certificate_repos, certificate_file, certificate_key, run_smoke_tests, run_only_smoke_tests, num_smoke_test_users, default_password, playbook)
+        command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s \
+        ec2_region=%s \
+        ec2_image=%s \
+        ec2_keypair=%s \
+        ec2_master_instance_type=%s \
+        ec2_infra_instance_type=%s \
+        ec2_node_instance_type=%s \
+        r53_zone=%s \
+        r53_host_zone=%s \
+        r53_wildcard_zone=%s \
+        console_port=%s \
+        api_port=%s \
+        num_app_nodes=%s \
+        num_infra_nodes=%s \
+        num_masters=%s \
+        hexboard_size=%s \
+        deployment_type=%s \
+        rhsm_user=%s \
+        rhsm_pass=%s \
+        skip_subscription_management=%s \
+        use_certificate_repos=%s \
+        certificate_file=%s \
+        certificate_key=%s \
+        run_smoke_tests=%s \
+        run_only_smoke_tests=%s \
+        num_smoke_test_users=%s \
+        default_password=%s\' %s' % (cluster_id, 
+                        region, 
+                        ami, 
+                        keypair, 
+                        master_instance_type, 
+                        infra_instance_type, 
+                        node_instance_type, 
+                        r53_zone, 
+                        host_zone, 
+                        wildcard_zone, 
+                        console_port, 
+                        api_port, 
+                        num_nodes, 
+                        num_infra, 
+                        num_masters, 
+                        hexboard_size, 
+                        deployment_type, 
+                        rhsm_user, 
+                        rhsm_pass, 
+                        skip_subscription_management, 
+                        use_certificate_repos, 
+                        certificate_file, 
+                        certificate_key, 
+                        run_smoke_tests, 
+                        run_only_smoke_tests, 
+                        num_smoke_test_users, 
+                        default_password, 
+                        playbook)
+        
 
         if verbose > 0:
             command += " -" + "".join(['v']*verbose)
