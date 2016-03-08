@@ -6,7 +6,7 @@
   connection: local
   become: no
   tasks:
-  - include: ../tasks/group_setup.yml
+  - include: tasks/group_setup.yml
 
 - name: Gather environment information
   hosts: project_master
@@ -21,7 +21,7 @@
 - name: Node post configuration
   hosts: nodes
   vars_files:
-  - ../vars.yml
+  - vars.yml
   tasks:
   - name: Insert kuberenetes service IP as first resolver
     lineinfile:
@@ -44,7 +44,7 @@
 - name: User creation
   hosts: masters
   vars_files:
-  - ../vars.yml
+  - vars.yml
   tasks:
   - name: Create the default users
     command: "htpasswd -b /etc/origin/master/htpasswd {{ item.user }} {{ default_password }}"
@@ -53,7 +53,7 @@
 - name: Initial environment configuration
   hosts: project_master
   vars_files:
-  - ../vars.yml
+  - vars.yml
   vars:
     proxy:
       app_name: sketch
@@ -134,7 +134,7 @@
   vars:
     default_context: 'default/openshift-internal-{{ r53_host_zone  | regex_replace("\.", "-") }}:{{ api_port }}/system:admin'
   vars_files:
-  - ../vars.yml
+  - vars.yml
   tasks:
   - name: Find current projects list
     command: oc get projects
@@ -159,7 +159,7 @@
     when: dcs_out | failed
 
   - name: "Get the demo user's token"
-    script: ../files/get_token.sh
+    script: files/get_token.sh
     register: auth_token
     when: dcs_out | failed
 
@@ -175,7 +175,7 @@
   - name: Install the hexboard template file on the master
     template:
       dest: /root/hexboard_template.json
-      src: ../templates/hexboard_template.json.j2
+      src: templates/hexboard_template.json.j2
     when: dcs_out | failed
 
   - name: Create the objects in the hexboard template
