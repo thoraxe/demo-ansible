@@ -1,6 +1,9 @@
 # vim: set ft=ansible:
 - name: Repository configuration
   hosts: cluster_hosts
+  gather_facts: no
+  vars:
+    aos_repo: 'https://mirror.ops.rhcloud.com/libra/rhui-rhel-server-7-ose/'
   tasks:
   - name: Enable rhui extras channel
     command: yum-config-manager --enable rhui-REGION-rhel-server-extras
