@@ -33,7 +33,7 @@
     delegate_to: localhost
     
 # Register any un-registered hosts to rhsm
-- include: util_playbooks/register_host.yml
+- include: register_host.yml
 
 # Yum repo configuration
 - include: host_repos.yml
