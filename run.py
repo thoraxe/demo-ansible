@@ -22,7 +22,7 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               show_default=True, help='Number of masters',
               callback=validate_masters)
 @click.option('--hexboard-size', type=click.Choice(hexboard_sizes),
-              help='Hexboard size (nodes tiny=32, xsmall=64, small=108, medium=266, large=512, xlarge=1026)',
+              help='Override Hexboard size calculation (tiny=32, xsmall=64, small=108, medium=266, large=512, xlarge=1026)',
               show_default=True)
 @click.option('--region', default='us-east-1', help='ec2 region',
               show_default=True)
@@ -103,18 +103,21 @@ def launch_demo_env(num_nodes,
     click.echo('\tconsole port: %s' % console_port)
     click.echo('\tapi port: %s' % api_port)
 
-    if num_nodes <= 1:
-        hexboard_size = 'tiny'
-    elif num_nodes < 3:
-        hexboard_size = 'xsmall'
-    elif num_nodes < 5:
-        hexboard_size = 'small'
-    elif num_nodes < 9:
-        hexboard_size = 'medium'
-    elif num_nodes < 15:
-        hexboard_size = 'large'
-    else:
-        hexboard_size = 'xlarge'
+    # hexboard override
+    if hexboard_size is None:
+        if num_nodes <= 1:
+            hexboard_size = 'tiny'
+        elif num_nodes < 3:
+            hexboard_size = 'xsmall'
+        elif num_nodes < 5:
+            hexboard_size = 'small'
+        elif num_nodes < 9:
+            hexboard_size = 'medium'
+        elif num_nodes < 15:
+            hexboard_size = 'large'
+        else:
+            hexboard_size = 'xlarge'
+
     click.echo('\thexboard_size: %s' % hexboard_size)
     click.echo('\tregion: %s' % region)
     click.echo('\tami: %s' % ami)
