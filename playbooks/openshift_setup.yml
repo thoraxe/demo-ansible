@@ -93,4 +93,4 @@
     os_firewall_enabled: False
 
 # Router, Registry, internal users and projects, priming
-- include: util_playbooks/post_setup.yml
+- include: post_setup.yml
