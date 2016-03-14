@@ -1,3 +1,4 @@
+# vim: sw=2 ts=2
 #!/usr/bin/env python
 
 import click
@@ -112,161 +113,161 @@ def launch_demo_env(num_nodes,
                     debug_playbook=None,
                     verbose=0):
 
-    # Prompt for RHSM user and password if not skipping subscription management
-    if not skip_subscription_management:
-        # If the user already provided values, don't bother asking again
-        if rhsm_user is None:
-                rhsm_user = click.prompt("RHSM username?")
-        if rhsm_pass is None:
-                rhsm_pass = click.prompt("RHSM password?", hide_input=True, confirmation_prompt=True)
-        
-    # Override hexboard size calculation
-    if hexboard_size is None:
-        if num_nodes <= 1:
-            hexboard_size = 'tiny'
-        elif num_nodes < 3:
-            hexboard_size = 'xsmall'
-        elif num_nodes < 5:
-            hexboard_size = 'small'
-        elif num_nodes < 9:
-            hexboard_size = 'medium'
-        elif num_nodes < 15:
-            hexboard_size = 'large'
-        else:
-            hexboard_size = 'xlarge'
-
-    # Calculate various DNS values
-    host_zone="%s.%s" % (cluster_id, r53_zone)
-    wildcard_zone="%s.%s.%s" % (app_dns_prefix, cluster_id, r53_zone)
-
-    # Display information to the user about their choices
-    click.echo('Configured values:')
-    click.echo('\tcluster_id: %s' % cluster_id)
-    click.echo('\tnodes: %s' % num_nodes)
-    click.echo('\tinfra nodes: %s' % num_infra)
-    click.echo('\tmasters: %s' % num_masters)
-    click.echo('\tconsole port: %s' % console_port)
-    click.echo('\tapi port: %s' % api_port)
-    click.echo('\thexboard_size: %s' % hexboard_size)
-    click.echo('\tregion: %s' % region)
-    click.echo('\tami: %s' % ami)
-    click.echo('\tmaster instance_type: %s' % master_instance_type)
-    click.echo('\tnode_instance_type: %s' % node_instance_type)
-    click.echo('\tinfra_instance_type: %s' % infra_instance_type)
-    click.echo('\tkeypair: %s' % keypair)
-    click.echo('\tr53_zone: %s' % r53_zone)
-    click.echo('\tapp_dns_prefix: %s' % app_dns_prefix)
-    click.echo('\tdeployment_type: %s' % deployment_type)
-
-    # Don't bother to display subscription manager values if we're skipping subscription management
-    if not skip_subscription_management:
-            click.echo('\trhsm_user: %s' % rhsm_user)
-            click.echo('\trhsm_pass: *******')
-
-    click.echo('Host DNS entries will be created under the %s domain' % host_zone)
-    click.echo('Application wildcard zone for this env will be %s' % wildcard_zone)
-
-    if use_certificate_repos:
-        click.echo('Certificate file %s and certificate key %s will be used for the yum repos' % (certificate_file, certificate_key))
-
-    if run_smoke_tests or run_only_smoke_tests:
-        click.echo('Smoke tests will be run following environment creation with %s users with password %s' % (num_smoke_test_users, default_password))
-
-    if run_only_smoke_tests:
-        click.echo('Only smoke tests will be run.')
-
-    if debug_playbook:
-        click.echo('We will debug the following playbook: %s' % (debug_playbook))
-
-    if not no_confirm and not click.confirm('Continue using these values?'):
-        sys.exit(0)
-
-    if debug_playbook:
-        playbooks = [debug_playbook]
-    elif run_only_smoke_tests:
-        playbooks = ['playbooks/projects_setup.yml']
+  # Prompt for RHSM user and password if not skipping subscription management
+  if not skip_subscription_management:
+    # If the user already provided values, don't bother asking again
+    if rhsm_user is None:
+      rhsm_user = click.prompt("RHSM username?")
+    if rhsm_pass is None:
+      rhsm_pass = click.prompt("RHSM password?", hide_input=True, confirmation_prompt=True)
+      
+  # Override hexboard size calculation
+  if hexboard_size is None:
+    if num_nodes <= 1:
+      hexboard_size = 'tiny'
+    elif num_nodes < 3:
+      hexboard_size = 'xsmall'
+    elif num_nodes < 5:
+      hexboard_size = 'small'
+    elif num_nodes < 9:
+      hexboard_size = 'medium'
+    elif num_nodes < 15:
+      hexboard_size = 'large'
     else:
-        playbooks = ['playbooks/bootstrap.yml', 'playbooks/openshift_setup.yml', 'playbooks/projects_setup.yml']
-
-    for playbook in playbooks:
-
-        # hide cache output unless in verbose mode
-        devnull='> /dev/null'
-
-        if verbose > 0:
-            devnull=''
-
-        # refresh the inventory cache to prevent stale hosts from
-        # interferring with re-running
-        command='inventory/aws/hosts/ec2.py --refresh-cache %s' % (devnull)
-        os.system(command)
-
-        # remove any cached facts to prevent stale data during a re-run
-        command='rm -rf .ansible/cached_facts'
-        os.system(command)
-
-        command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s \
-        ec2_region=%s \
-        ec2_image=%s \
-        ec2_keypair=%s \
-        ec2_master_instance_type=%s \
-        ec2_infra_instance_type=%s \
-        ec2_node_instance_type=%s \
-        r53_zone=%s \
-        r53_host_zone=%s \
-        r53_wildcard_zone=%s \
-        console_port=%s \
-        api_port=%s \
-        num_app_nodes=%s \
-        num_infra_nodes=%s \
-        num_masters=%s \
-        hexboard_size=%s \
-        deployment_type=%s \
-        rhsm_user=%s \
-        rhsm_pass=%s \
-        skip_subscription_management=%s \
-        use_certificate_repos=%s \
-        certificate_file=%s \
-        certificate_key=%s \
-        run_smoke_tests=%s \
-        run_only_smoke_tests=%s \
-        num_smoke_test_users=%s \
-        default_password=%s\' %s' % (cluster_id, 
-                        region, 
-                        ami, 
-                        keypair, 
-                        master_instance_type, 
-                        infra_instance_type, 
-                        node_instance_type, 
-                        r53_zone, 
-                        host_zone, 
-                        wildcard_zone, 
-                        console_port, 
-                        api_port, 
-                        num_nodes, 
-                        num_infra, 
-                        num_masters, 
-                        hexboard_size, 
-                        deployment_type, 
-                        rhsm_user, 
-                        rhsm_pass, 
-                        skip_subscription_management, 
-                        use_certificate_repos, 
-                        certificate_file, 
-                        certificate_key, 
-                        run_smoke_tests, 
-                        run_only_smoke_tests, 
-                        num_smoke_test_users, 
-                        default_password, 
-                        playbook)
-        
-
-        if verbose > 0:
-            command += " -" + "".join(['v']*verbose)
-
-        status = os.system(command)
-        if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
-            return os.WEXITSTATUS(status)
+      hexboard_size = 'xlarge'
+  
+  # Calculate various DNS values
+  host_zone="%s.%s" % (cluster_id, r53_zone)
+  wildcard_zone="%s.%s.%s" % (app_dns_prefix, cluster_id, r53_zone)
+  
+  # Display information to the user about their choices
+  click.echo('Configured values:')
+  click.echo('\tcluster_id: %s' % cluster_id)
+  click.echo('\tnodes: %s' % num_nodes)
+  click.echo('\tinfra nodes: %s' % num_infra)
+  click.echo('\tmasters: %s' % num_masters)
+  click.echo('\tconsole port: %s' % console_port)
+  click.echo('\tapi port: %s' % api_port)
+  click.echo('\thexboard_size: %s' % hexboard_size)
+  click.echo('\tregion: %s' % region)
+  click.echo('\tami: %s' % ami)
+  click.echo('\tmaster instance_type: %s' % master_instance_type)
+  click.echo('\tnode_instance_type: %s' % node_instance_type)
+  click.echo('\tinfra_instance_type: %s' % infra_instance_type)
+  click.echo('\tkeypair: %s' % keypair)
+  click.echo('\tr53_zone: %s' % r53_zone)
+  click.echo('\tapp_dns_prefix: %s' % app_dns_prefix)
+  click.echo('\tdeployment_type: %s' % deployment_type)
+  
+  # Don't bother to display subscription manager values if we're skipping subscription management
+  if not skip_subscription_management:
+    click.echo('\trhsm_user: %s' % rhsm_user)
+    click.echo('\trhsm_pass: *******')
+  
+  click.echo('Host DNS entries will be created under the %s domain' % host_zone)
+  click.echo('Application wildcard zone for this env will be %s' % wildcard_zone)
+  
+  if use_certificate_repos:
+    click.echo('Certificate file %s and certificate key %s will be used for the yum repos' % (certificate_file, certificate_key))
+  
+  if run_smoke_tests or run_only_smoke_tests:
+    click.echo('Smoke tests will be run following environment creation with %s users with password %s' % (num_smoke_test_users, default_password))
+  
+  if run_only_smoke_tests:
+    click.echo('Only smoke tests will be run.')
+  
+  if debug_playbook:
+    click.echo('We will debug the following playbook: %s' % (debug_playbook))
+  
+  if not no_confirm and not click.confirm('Continue using these values?'):
+    sys.exit(0)
+  
+  if debug_playbook:
+    playbooks = [debug_playbook]
+  elif run_only_smoke_tests:
+    playbooks = ['playbooks/projects_setup.yml']
+  else:
+    playbooks = ['playbooks/bootstrap.yml', 'playbooks/openshift_setup.yml', 'playbooks/projects_setup.yml']
+  
+  for playbook in playbooks:
+  
+    # hide cache output unless in verbose mode
+    devnull='> /dev/null'
+    
+    if verbose > 0:
+      devnull=''
+    
+    # refresh the inventory cache to prevent stale hosts from
+    # interferring with re-running
+    command='inventory/aws/hosts/ec2.py --refresh-cache %s' % (devnull)
+    os.system(command)
+    
+    # remove any cached facts to prevent stale data during a re-run
+    command='rm -rf .ansible/cached_facts'
+    os.system(command)
+    
+    command='ansible-playbook -i inventory/aws/hosts -e \'cluster_id=%s \
+    ec2_region=%s \
+    ec2_image=%s \
+    ec2_keypair=%s \
+    ec2_master_instance_type=%s \
+    ec2_infra_instance_type=%s \
+    ec2_node_instance_type=%s \
+    r53_zone=%s \
+    r53_host_zone=%s \
+    r53_wildcard_zone=%s \
+    console_port=%s \
+    api_port=%s \
+    num_app_nodes=%s \
+    num_infra_nodes=%s \
+    num_masters=%s \
+    hexboard_size=%s \
+    deployment_type=%s \
+    rhsm_user=%s \
+    rhsm_pass=%s \
+    skip_subscription_management=%s \
+    use_certificate_repos=%s \
+    certificate_file=%s \
+    certificate_key=%s \
+    run_smoke_tests=%s \
+    run_only_smoke_tests=%s \
+    num_smoke_test_users=%s \
+    default_password=%s\' %s' % (cluster_id, 
+                    region, 
+                    ami, 
+                    keypair, 
+                    master_instance_type, 
+                    infra_instance_type, 
+                    node_instance_type, 
+                    r53_zone, 
+                    host_zone, 
+                    wildcard_zone, 
+                    console_port, 
+                    api_port, 
+                    num_nodes, 
+                    num_infra, 
+                    num_masters, 
+                    hexboard_size, 
+                    deployment_type, 
+                    rhsm_user, 
+                    rhsm_pass, 
+                    skip_subscription_management, 
+                    use_certificate_repos, 
+                    certificate_file, 
+                    certificate_key, 
+                    run_smoke_tests, 
+                    run_only_smoke_tests, 
+                    num_smoke_test_users, 
+                    default_password, 
+                    playbook)
+    
+    
+    if verbose > 0:
+      command += " -" + "".join(['v']*verbose)
+    
+    status = os.system(command)
+    if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
+      return os.WEXITSTATUS(status)
 
 if __name__ == '__main__':
-    launch_demo_env(auto_envvar_prefix='OSE_DEMO')
+  launch_demo_env(auto_envvar_prefix='OSE_DEMO')
