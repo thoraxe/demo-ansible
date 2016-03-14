@@ -116,7 +116,7 @@ def launch_demo_env(num_nodes,
                     verbose=0):
 
   # If not running cleanup need to prompt for the R53 zone:
-  if not cleanup and r53_zone is None:
+  if r53_zone is None:
     r53_zone = click.prompt('R53 zone')
 
   # Cannot run cleanup with no-confirm
