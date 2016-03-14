@@ -32,22 +32,26 @@
       overwrite: yes
     delegate_to: localhost
     
-# Register any un-registered hosts to rhsm
-- include: register_host.yml
+# Register hosts via RHSM (as required) and configure repos
+- include: subscriptions_and_repos.yml
 
-# Yum repo configuration
-- include: host_repos.yml
-
-- hosts: cluster_hosts
+- name: Host Cleanup 
+  hosts: cluster_hosts
   tasks:
   - name: Create /etc/origin directory
     command: mkdir -p /etc/origin
+
   - name: Create aws.conf ini file
     ini_file:
       dest: /etc/origin/aws.conf
       section: Global
       option: Zone
       value: "{{ ec2_placement }}"
+
+  - name: Update current package set
+    yum:
+      name: '*'
+      state: latest
 
 # Configure the instances
 # openshift_sdn_mtu is required again because of a bug in auto-detection of MTU
