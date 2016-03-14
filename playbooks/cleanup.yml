@@ -6,7 +6,8 @@
   vars_files:
   - vars.yml
   tasks:
-  - add_host:
+  - name: Find the cluster hosts
+    add_host:
       name: "{{ item }}"
       ansible_ssh_user: openshift
       ansible_sudo: yes
@@ -24,17 +25,27 @@
       state: absent
     when: not (skip_subscription_management | bool)
 
-- hosts: localhost
+- name: Delete the EC2 items 
+  hosts: localhost
   connection: local
   become: no
   gather_facts: no
   vars_files:
   - vars.yml
   tasks:
+  - name: Delete the Route53 entry for master
+    route53:
+      command: delete
+      zone: "{{ r53_zone }}"
+      record: "openshift-master.{{ r53_host_zone }}"
+      ttl: 60
+      type: A
+      value: "{{ hostvars[groups['tag_openshift-demo-' ~ cluster_id ~ '-host-type_master'].0]['ec2_ip_address'] }}"
+      overwrite: yes
+
   - name: Destroy the CloudFormation Stack
     cloudformation:
       region: "{{ ec2_region }}"
       stack_name: openshift-demo-{{ cluster_id }}
       state: absent
       template: files/cloudformation.json
-
