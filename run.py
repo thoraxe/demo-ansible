@@ -57,8 +57,7 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               show_default=True)
 
 ### DNS options
-@click.option('--r53-zone', prompt=True,
-              help='route53 hosted zone (must be pre-configured)')
+@click.option('--r53-zone', help='route53 hosted zone (must be pre-configured)')
 @click.option('--app-dns-prefix', default='apps', help='application dns prefix',
               show_default=True)
 
@@ -80,6 +79,8 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               help='Skip confirmation prompt')
 @click.option('--debug-playbook', 
               help='Specify a path to a specific playbook to debug with all vars')
+@click.option('--cleanup', is_flag=True,
+              help='Deletes environment')
 @click.help_option('--help', '-h')
 @click.option('-v', '--verbose', count=True)
 
@@ -111,12 +112,23 @@ def launch_demo_env(num_nodes,
                     run_only_smoke_tests=False,
                     default_password=None, 
                     debug_playbook=None,
+                    cleanup=False,
                     verbose=0):
 
+  # If not running cleanup need to prompt for the R53 zone:
+  if not cleanup and r53_zone is None:
+    r53_zone = click.prompt('R53 zone')
+
+  # Cannot run cleanup with no-confirm
+  if cleanup and no_confirm:
+    click.echo('Cannot use --cleanup and --no-confirm as it is not safe.')
+
   # If skipping subscription management, must have cert repos enabled
-  if skip_subscription_management and not use_certificate_repos:
-    click.echo('Cannot skip subscription management without using certificate repos.')
-    sys.exit(1)
+  # If cleaning up, this is ok
+  if not cleanup:
+    if skip_subscription_management and not use_certificate_repos:
+      click.echo('Cannot skip subscription management without using certificate repos.')
+      sys.exit(1)
 
   # If using subscription management, cannot use certificate repos
   if not skip_subscription_management and use_certificate_repos:
@@ -132,7 +144,7 @@ def launch_demo_env(num_nodes,
       rhsm_pass = click.prompt("RHSM password?", hide_input=True, confirmation_prompt=True)
 
   # Prompt for certificate files if using certicicate repos
-  if use_certificate_repos:
+  if use_certificate_repos and not cleanup:
     if certificate_file is None:
       certificate_file = click.prompt("Certificate file absolute location? (eg: /home/user/folder/file.pem)")
     if certificate_key is None:
@@ -200,13 +212,21 @@ def launch_demo_env(num_nodes,
   if debug_playbook:
     click.echo('We will debug the following playbook: %s' % (debug_playbook))
   
-  if not no_confirm and not click.confirm('Continue using these values?'):
-    sys.exit(0)
+  if not no_confirm and not cleanup:
+    click.confirm('Continue using these values?', abort=True)
+
+  # Special confirmations for cleanup
+  if cleanup:
+    click.confirm('Delete the cluster %s' % cluster_id, abort=True)
+    click.confirm('ARE YOU REALLY SURE YOU WANT TO DELETE THE CLUSTER %s' % cluster_id, abort=True)
+    click.confirm('Press enter to continue', abort=True, default=True)
   
   if debug_playbook:
     playbooks = [debug_playbook]
   elif run_only_smoke_tests:
     playbooks = ['playbooks/projects_setup.yml']
+  elif cleanup:
+    playbooks = ['playbooks/cleanup.yml']
   else:
     playbooks = ['playbooks/bootstrap.yml', 'playbooks/openshift_setup.yml', 'playbooks/projects_setup.yml']
   
