@@ -1,5 +1,5 @@
-# vim: sw=2 ts=2
 #!/usr/bin/env python
+# vim: sw=2 ts=2
 
 import click
 import os
@@ -113,6 +113,16 @@ def launch_demo_env(num_nodes,
                     debug_playbook=None,
                     verbose=0):
 
+  # If skipping subscription management, must have cert repos enabled
+  if skip_subscription_management and not use_certificate_repos:
+    click.echo('Cannot skip subscription management without using certificate repos.')
+    sys.exit(1)
+
+  # If using subscription management, cannot use certificate repos
+  if not skip_subscription_management and use_certificate_repos:
+    click.echo('Must skip subscription management when using certificate repos')
+    sys.exit(1)
+
   # Prompt for RHSM user and password if not skipping subscription management
   if not skip_subscription_management:
     # If the user already provided values, don't bother asking again
@@ -120,6 +130,13 @@ def launch_demo_env(num_nodes,
       rhsm_user = click.prompt("RHSM username?")
     if rhsm_pass is None:
       rhsm_pass = click.prompt("RHSM password?", hide_input=True, confirmation_prompt=True)
+
+  # Prompt for certificate files if using certicicate repos
+  if use_certificate_repos:
+    if certificate_file is None:
+      certificate_file = click.prompt("Certificate file absolute location? (eg: /home/user/folder/file.pem)")
+    if certificate_key is None:
+      certificate_key = click.prompt("Certificate key absolute location? (eg: /home/user/folder/file.pem)")
       
   # Override hexboard size calculation
   if hexboard_size is None:
@@ -143,36 +160,40 @@ def launch_demo_env(num_nodes,
   # Display information to the user about their choices
   click.echo('Configured values:')
   click.echo('\tcluster_id: %s' % cluster_id)
+  click.echo('\tami: %s' % ami)
+  click.echo('\tregion: %s' % region)
+  click.echo('\tmaster instance_type: %s' % master_instance_type)
+  click.echo('\tnode_instance_type: %s' % node_instance_type)
+  click.echo('\tinfra_instance_type: %s' % infra_instance_type)
+  click.echo('\tkeypair: %s' % keypair)
   click.echo('\tnodes: %s' % num_nodes)
   click.echo('\tinfra nodes: %s' % num_infra)
   click.echo('\tmasters: %s' % num_masters)
   click.echo('\tconsole port: %s' % console_port)
   click.echo('\tapi port: %s' % api_port)
+  click.echo('\tdeployment_type: %s' % deployment_type)
   click.echo('\thexboard_size: %s' % hexboard_size)
-  click.echo('\tregion: %s' % region)
-  click.echo('\tami: %s' % ami)
-  click.echo('\tmaster instance_type: %s' % master_instance_type)
-  click.echo('\tnode_instance_type: %s' % node_instance_type)
-  click.echo('\tinfra_instance_type: %s' % infra_instance_type)
-  click.echo('\tkeypair: %s' % keypair)
   click.echo('\tr53_zone: %s' % r53_zone)
   click.echo('\tapp_dns_prefix: %s' % app_dns_prefix)
-  click.echo('\tdeployment_type: %s' % deployment_type)
+  click.echo('\thost dns: %s' % host_zone)
+  click.echo('\tapps dns: %s' % wildcard_zone)
   
   # Don't bother to display subscription manager values if we're skipping subscription management
   if not skip_subscription_management:
     click.echo('\trhsm_user: %s' % rhsm_user)
     click.echo('\trhsm_pass: *******')
   
-  click.echo('Host DNS entries will be created under the %s domain' % host_zone)
-  click.echo('Application wildcard zone for this env will be %s' % wildcard_zone)
-  
   if use_certificate_repos:
-    click.echo('Certificate file %s and certificate key %s will be used for the yum repos' % (certificate_file, certificate_key))
+    click.echo('\tcertificate_file: %s' % certificate_file)
+    click.echo('\tcertificate_key: %s' % certificate_key)
   
   if run_smoke_tests or run_only_smoke_tests:
-    click.echo('Smoke tests will be run following environment creation with %s users with password %s' % (num_smoke_test_users, default_password))
+    click.echo('\tnum smoke users: %s' % num_smoke_test_users)
+
+  click.echo('\tdefault password: %s' % default_password)
   
+  click.echo("")
+
   if run_only_smoke_tests:
     click.echo('Only smoke tests will be run.')
   
