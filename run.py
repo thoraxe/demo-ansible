@@ -12,8 +12,10 @@ def validate_masters(ctx, param, value):
 hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 
 @click.command()
+
+### Cluster options
 @click.option('--cluster-id', default='demo', show_default=True,
-              help='cluster identifier (used for assigning ec2 tags, naming security groups, and is used as a subdomain of the r53-zone for environment dns entries')
+              help='Cluster identifier (used for prefixing/naming various items created in AWS')
 @click.option('--num-nodes', type=click.INT, default=1, show_default=True,
               help='Number of application nodes')
 @click.option('--num-infra', type=click.IntRange(1,3), default=1,
@@ -24,6 +26,22 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 @click.option('--hexboard-size', type=click.Choice(hexboard_sizes),
               help='Override Hexboard size calculation (tiny=32, xsmall=64, small=108, medium=266, large=512, xlarge=1026)',
               show_default=True)
+@click.option('--console-port', default='8443', type=click.IntRange(1,65535), help='OpenShift web console port',
+              show_default=True)
+@click.option('--api-port', default='8443', type=click.IntRange(1,65535), help='OpenShift API port',
+              show_default=True)
+@click.option('--deployment-type', default='openshift-enterprise', help='openshift deployment type',
+              show_default=True)
+@click.option('--default-password', default='openshift3',
+              help='password for all users', show_default=True)
+
+### Smoke test options
+@click.option('--run-smoke-tests', is_flag=True, help='Run workshop smoke tests')
+@click.option('--num-smoke-test-users', default=5, type=click.INT,
+              help='Number of smoke test users', show_default=True)
+@click.option('--run-only-smoke-tests', is_flag=True, help='Run only the workshop smoke tests')
+
+### AWS/EC2 options
 @click.option('--region', default='us-east-1', help='ec2 region',
               show_default=True)
 @click.option('--ami', default='ami-2051294a', help='ec2 ami',
@@ -36,19 +54,17 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               show_default=True)
 @click.option('--keypair', default='default', help='ec2 keypair name',
               show_default=True)
+
+### DNS options
 @click.option('--r53-zone', prompt=True,
               help='route53 hosted zone (must be pre-configured)')
 @click.option('--app-dns-prefix', default='apps', help='application dns prefix',
               show_default=True)
-@click.option('--deployment-type', default='openshift-enterprise', help='openshift deployment type',
-              show_default=True)
-@click.option('--console-port', default='8443', type=click.IntRange(1,65535), help='OpenShift web console port',
-              show_default=True)
-@click.option('--api-port', default='8443', type=click.IntRange(1,65535), help='OpenShift API port',
-              show_default=True)
-@click.option('--rhsm-user', prompt=True, help='Red Hat Subscription Management User')
-@click.option('--rhsm-pass', prompt=True, hide_input=True,
-              help='Red Hat Subscription Management Password')
+
+### Subscription and Software options
+@click.option('--rhsm-user', help='Red Hat Subscription Management User')
+@click.option('--rhsm-pass', help='Red Hat Subscription Management Password', 
+                hide_input=True,)
 @click.option('--skip-subscription-management', is_flag=True,
               help='Skip subscription management steps')
 @click.option('--use-certificate-repos', is_flag=True,
@@ -57,18 +73,15 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               show_default=True)
 @click.option('--certificate-key', help='Certificate key for the yum repository',
               show_default=True)
+
+### Miscellaneous options
 @click.option('--no-confirm', is_flag=True,
               help='Skip confirmation prompt')
-@click.option('--run-smoke-tests', is_flag=True, help='Run workshop smoke tests')
-@click.option('--num-smoke-test-users', default=5, type=click.INT,
-              help='Number of smoke test users', show_default=True)
-@click.option('--run-only-smoke-tests', is_flag=True, help='Run only the workshop smoke tests')
-@click.option('--default-password', default='openshift3',
-              help='password for all users', show_default=True)
 @click.option('--debug-playbook', 
               help='Specify a path to a specific playbook to debug with all vars')
 @click.help_option('--help', '-h')
 @click.option('-v', '--verbose', count=True)
+
 def launch_demo_env(num_nodes, 
                     num_infra, 
                     num_masters, 
@@ -98,15 +111,16 @@ def launch_demo_env(num_nodes,
                     default_password=None, 
                     debug_playbook=None,
                     verbose=0):
-    click.echo('Configured values:')
-    click.echo('\tcluster_id: %s' % cluster_id)
-    click.echo('\tnodes: %s' % num_nodes)
-    click.echo('\tinfra nodes: %s' % num_infra)
-    click.echo('\tmasters: %s' % num_masters)
-    click.echo('\tconsole port: %s' % console_port)
-    click.echo('\tapi port: %s' % api_port)
 
-    # hexboard override
+    # Prompt for RHSM user and password if not skipping subscription management
+    if not skip_subscription_management:
+        # If the user already provided values, don't bother asking again
+        if rhsm_user is None:
+                rhsm_user = click.prompt("RHSM username?")
+        if rhsm_pass is None:
+                rhsm_pass = click.prompt("RHSM password?", hide_input=True, confirmation_prompt=True)
+        
+    # Override hexboard size calculation
     if hexboard_size is None:
         if num_nodes <= 1:
             hexboard_size = 'tiny'
@@ -121,6 +135,18 @@ def launch_demo_env(num_nodes,
         else:
             hexboard_size = 'xlarge'
 
+    ### Calculate various DNS values
+    host_zone="%s.%s" % (cluster_id, r53_zone)
+    wildcard_zone="%s.%s.%s" % (app_dns_prefix, cluster_id, r53_zone)
+
+    ### Display information to the user about their choices
+    click.echo('Configured values:')
+    click.echo('\tcluster_id: %s' % cluster_id)
+    click.echo('\tnodes: %s' % num_nodes)
+    click.echo('\tinfra nodes: %s' % num_infra)
+    click.echo('\tmasters: %s' % num_masters)
+    click.echo('\tconsole port: %s' % console_port)
+    click.echo('\tapi port: %s' % api_port)
     click.echo('\thexboard_size: %s' % hexboard_size)
     click.echo('\tregion: %s' % region)
     click.echo('\tami: %s' % ami)
@@ -133,10 +159,6 @@ def launch_demo_env(num_nodes,
     click.echo('\tdeployment_type: %s' % deployment_type)
     click.echo('\trhsm_user: %s' % rhsm_user)
     click.echo('\trhsm_pass: *******')
-
-    host_zone="%s.%s" % (cluster_id, r53_zone)
-    wildcard_zone="%s.%s.%s" % (app_dns_prefix, cluster_id, r53_zone)
-
     click.echo('Host DNS entries will be created under the %s domain' % host_zone)
     click.echo('Application wildcard zone for this env will be %s' % wildcard_zone)
 
