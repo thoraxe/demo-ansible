@@ -135,11 +135,11 @@ def launch_demo_env(num_nodes,
         else:
             hexboard_size = 'xlarge'
 
-    ### Calculate various DNS values
+    # Calculate various DNS values
     host_zone="%s.%s" % (cluster_id, r53_zone)
     wildcard_zone="%s.%s.%s" % (app_dns_prefix, cluster_id, r53_zone)
 
-    ### Display information to the user about their choices
+    # Display information to the user about their choices
     click.echo('Configured values:')
     click.echo('\tcluster_id: %s' % cluster_id)
     click.echo('\tnodes: %s' % num_nodes)
@@ -157,8 +157,12 @@ def launch_demo_env(num_nodes,
     click.echo('\tr53_zone: %s' % r53_zone)
     click.echo('\tapp_dns_prefix: %s' % app_dns_prefix)
     click.echo('\tdeployment_type: %s' % deployment_type)
-    click.echo('\trhsm_user: %s' % rhsm_user)
-    click.echo('\trhsm_pass: *******')
+
+    # Don't bother to display subscription manager values if we're skipping subscription management
+    if not skip_subscription_management:
+            click.echo('\trhsm_user: %s' % rhsm_user)
+            click.echo('\trhsm_pass: *******')
+
     click.echo('Host DNS entries will be created under the %s domain' % host_zone)
     click.echo('Application wildcard zone for this env will be %s' % wildcard_zone)
 
