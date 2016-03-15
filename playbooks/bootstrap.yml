@@ -27,7 +27,8 @@
       template: files/cloudformation.json
       template_parameters:
         Route53HostedZone: "{{ r53_zone }}."
-        MasterApiPort: "{{ console_port }}"
+        MasterApiPort: "{{ api_port }}"
+        MasterHealthTarget: "TCP:{{ api_port }}"
         MasterClusterHostname: openshift.internal.{{ r53_host_zone }}
         MasterClusterPublicHostname: openshift.{{ r53_host_zone }}
         AppWildcardDomain: "*.{{ r53_wildcard_zone }}"
