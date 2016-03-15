@@ -8,8 +8,10 @@
       "Type": "String"
     },
     "MasterApiPort": {
-      "Type": "Number",
-      "Default": "8443"
+      "Type": "Number"
+    },
+    "MasterHealthTarget": {
+      "Type": "String"
     },
     "Route53HostedZone": {
       "Type": "String"
@@ -518,15 +520,15 @@
         "HealthCheck": {
           "HealthyThreshold" : "2",
           "Interval" : "5",
-          "Target" : "TCP:443",
+          "Target" : { "Ref": "MasterHealthTarget" },
           "Timeout" : "2",
           "UnhealthyThreshold" : "2"
         },
         "Listeners":[
           {
-            "InstancePort": "443",
+            "InstancePort": { "Ref" : "MasterApiPort" },
             "InstanceProtocol": "TCP",
-            "LoadBalancerPort": "443",
+            "LoadBalancerPort": { "Ref" : "MasterApiPort" },
             "Protocol": "TCP"
           }
         ],
@@ -562,15 +564,15 @@
         "HealthCheck": {
           "HealthyThreshold" : "2",
           "Interval" : "5",
-          "Target" : "TCP:443",
+          "Target" : { "Ref": "MasterHealthTarget" },
           "Timeout" : "2",
           "UnhealthyThreshold" : "2"
         },
         "Listeners":[
           {
-            "InstancePort": "443",
+            "InstancePort": { "Ref" : "MasterApiPort" },
             "InstanceProtocol": "TCP",
-            "LoadBalancerPort": "443",
+            "LoadBalancerPort": { "Ref" : "MasterApiPort" },
             "Protocol": "TCP"
           }
         ],
@@ -907,7 +909,7 @@
     },
     "InfraASG": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC"],
+      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC","Subnet1"],
       "Properties": {
         "DesiredCapacity": {"Ref": "NumInfra"},
         "MinSize": {"Ref": "NumInfra"},
@@ -953,7 +955,7 @@
     },
     "NodeASG": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC"],
+      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC","Subnet1"],
       "Properties": {
         "DesiredCapacity": {"Ref": "NumNodes"},
         "MinSize": {"Ref": "NumNodes"},
@@ -998,7 +1000,7 @@
     },
     "MasterASG": {
       "Type": "AWS::AutoScaling::AutoScalingGroup",
-      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC"],
+      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC","Subnet1"],
       "Properties": {
         "DesiredCapacity": {"Ref": "NumMasters"},
         "MinSize": {"Ref": "NumMasters"},
