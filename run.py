@@ -5,11 +5,6 @@ import click
 import os
 import sys
 
-def validate_masters(ctx, param, value):
-    if value == 2:
-        raise click.BadParameter('num-masters must be 1 or 3')
-    return value
-
 hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 
 @click.command()
@@ -21,9 +16,6 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
               help='Number of application nodes')
 @click.option('--num-infra', type=click.IntRange(1,3), default=1,
               show_default=True, help='Number of infrastructure nodes')
-@click.option('--num-masters', type=click.IntRange(1,3), default=1,
-              show_default=True, help='Number of masters',
-              callback=validate_masters)
 @click.option('--hexboard-size', type=click.Choice(hexboard_sizes),
               help='Override Hexboard size calculation (tiny=32, xsmall=64, small=108, medium=266, large=512, xlarge=1026)',
               show_default=True)
@@ -45,7 +37,7 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 ### AWS/EC2 options
 @click.option('--region', default='us-east-1', help='ec2 region',
               show_default=True)
-@click.option('--ami', default='ami-2051294a', help='ec2 ami',
+@click.option('--ami', default='ami-10251c7a', help='ec2 ami',
               show_default=True)
 @click.option('--master-instance-type', default='m4.large', help='ec2 instance type',
               show_default=True)
@@ -86,7 +78,6 @@ hexboard_sizes = ['tiny', 'xsmall', 'small', 'medium', 'large', 'xlarge']
 
 def launch_demo_env(num_nodes, 
                     num_infra, 
-                    num_masters, 
                     hexboard_size=None,
                     region=None, 
                     ami=None, 
@@ -114,6 +105,9 @@ def launch_demo_env(num_nodes,
                     debug_playbook=None,
                     cleanup=False,
                     verbose=0):
+
+  # Force num_masters = 3 because of an issue with API startup and ELB health checks and more
+  num_masters = 3
 
   # If not running cleanup need to prompt for the R53 zone:
   if r53_zone is None:
