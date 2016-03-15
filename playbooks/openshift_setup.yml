@@ -86,6 +86,7 @@
     openshift_master_identity_providers: "{{ identity_providers }}"
     openshift_master_api_port: "{{ console_port }}"
     openshift_master_console_port: "{{ console_port }}"
+    openshift_package_version: 3.1.1.6
     osm_cluster_network_cidr: 10.0.0.0/8
     osm_host_subnet_length: 16
     osm_default_subdomain: "{{ r53_wildcard_zone }}"
