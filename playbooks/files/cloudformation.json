@@ -189,6 +189,7 @@
     },
     "Subnet1": {
       "Type": "AWS::EC2::Subnet",
+      "DependsOn": ["Vpc"],
       "Properties": {
         "AvailabilityZone": {"Fn::Select": ["0", {"Ref": "SubnetAvailabilityZones"}]},
         "CidrBlock": {"Fn::Select": ["0", {"Ref": "SubnetCidrBlocks"}]},
@@ -205,6 +206,7 @@
     },
     "Subnet2": {
       "Type": "AWS::EC2::Subnet",
+      "DependsOn": ["Vpc"],
       "Condition": "CreateSubnet2",
       "Properties": {
         "AvailabilityZone": {"Fn::Select": ["1", {"Ref": "SubnetAvailabilityZones"}]},
@@ -223,6 +225,7 @@
     },
     "Subnet3": {
       "Type": "AWS::EC2::Subnet",
+      "DependsOn": ["Vpc"],
       "Condition": "CreateSubnet3",
       "Properties": {
         "AvailabilityZone": {"Fn::Select": ["2", {"Ref": "SubnetAvailabilityZones"}]},
@@ -241,6 +244,7 @@
     },
     "Subnet4": {
       "Type": "AWS::EC2::Subnet",
+      "DependsOn": ["Vpc"],
       "Condition": "CreateSubnet4",
       "Properties": {
         "AvailabilityZone": {"Fn::Select": ["3", {"Ref": "SubnetAvailabilityZones"}]},
