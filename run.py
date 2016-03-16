@@ -304,5 +304,14 @@ def launch_demo_env(num_nodes,
     if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
       return os.WEXITSTATUS(status)
 
+  # if the last run playbook didn't explode, assume cluster provisioned successfully
+  # but make sure that user was not just running tests or cleaning up
+  if os.WIFEXITED(status) and os.WEXITSTATUS(status) == 0:
+    if not debug_playbook and not run_only_smoke_tests and not cleanup:
+      click.echo('Your cluster provisioned successfully. The console is available at https://openshift.%s:%s' % (host_zone, console_port)) 
+
+    if cleanup:
+      click.echo('Your cluster, %s, was de-provisioned and removed successfully.' % (cluster_id))
+
 if __name__ == '__main__':
   launch_demo_env(auto_envvar_prefix='OSE_DEMO')
