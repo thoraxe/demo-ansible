@@ -1,21 +1,21 @@
 ---
-- hosts: localhost
+- name: 'Initial setup of groups'
+  hosts: localhost
   connection: local
   become: no
   gather_facts: no
-  vars_files:
-  - vars.yml
   tasks:
-  - name: Find the cluster hosts
-    add_host:
-      name: "{{ item }}"
-      ansible_ssh_user: openshift
-      ansible_sudo: yes
-      groups: oo_hosts_to_unregister
-    with_items: groups['tag_openshift-demo-_' ~ cluster_id] | default([], True)
+  - name: 'Validating options...'
+    fail:
+      msg: required values not set
+    when: cluster_id is not defined or ec2_region is not defined or ec2_image is not defined or ec2_keypair is not defined or ec2_master_instance_type is not defined or ec2_infra_instance_type is not defined or ec2_node_instance_type is not defined or r53_zone is not defined or r53_host_zone is not defined or r53_wildcard_zone is not defined or num_app_nodes is not defined or hexboard_size is not defined or rhsm_user is not defined or rhsm_pass is not defined or deployment_type is not defined
+  - name: wait for ssh
+    wait_for: "port=22 host={{ item }}"
+    with_items: groups['tag_openshift-demo_' ~ cluster_id]
+  - include: tasks/group_setup.yml
 
 - name: Unregister host(s)
-  hosts: oo_hosts_to_unregister
+  hosts: cluster_hosts
   serial: 1
   tasks:
   - name: Unregister host
