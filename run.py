@@ -116,6 +116,7 @@ def launch_demo_env(num_nodes,
   # Cannot run cleanup with no-confirm
   if cleanup and no_confirm:
     click.echo('Cannot use --cleanup and --no-confirm as it is not safe.')
+    sys.exit(1)
 
   # If skipping subscription management, must have cert repos enabled
   # If cleaning up, this is ok
@@ -222,7 +223,7 @@ def launch_demo_env(num_nodes,
   elif cleanup:
     playbooks = ['playbooks/cleanup.yml']
   else:
-    playbooks = ['playbooks/bootstrap.yml', 'playbooks/openshift_setup.yml', 'playbooks/projects_setup.yml']
+    playbooks = ['playbooks/openshift_setup.yml', 'playbooks/projects_setup.yml']
   
   for playbook in playbooks:
   
@@ -299,6 +300,7 @@ def launch_demo_env(num_nodes,
     
     if verbose > 0:
       command += " -" + "".join(['v']*verbose)
+      click.echo('We are running: %s', % command)
     
     status = os.system(command)
     if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
@@ -314,4 +316,9 @@ def launch_demo_env(num_nodes,
       click.echo('Your cluster, %s, was de-provisioned and removed successfully.' % (cluster_id))
 
 if __name__ == '__main__':
+  # check for AWS access info
+  if os.getenv('AWS_ACCESS_KEY_ID') is None or os.getenv('AWS_SECRET_ACCESS_KEY') is None:
+    print 'AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY **MUST** be exported as environment variables.'
+    sys.exit(1)
+  
   launch_demo_env(auto_envvar_prefix='OSE_DEMO')

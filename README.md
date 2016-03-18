@@ -13,10 +13,8 @@ These are the scripts used to stand up your own environment running the demo fro
     hosted zone specified by r53-zone for each ec2 instance created as well as
     a wildcard dns entry for router)
   - Craete and modify EC2 instances
-- AWS credentials may be specified either through the `AWS_ACCESS_KEY_ID` and
-    `AWS_SECRET_ACCESS_KEY` env variables or using any of the environment
-    variables/configs supported by
-    [boto](http://boto.readthedocs.org/en/latest/boto_config_tut.html)
+- AWS credentials must be specified through the `AWS_ACCESS_KEY_ID` and
+    `AWS_SECRET_ACCESS_KEY` env variables
 - A pre-created route53
     [public hosted zone](http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/CreatingHostedZone.html)
 - A pre-created ec2 keypair
