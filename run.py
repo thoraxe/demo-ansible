@@ -300,7 +300,7 @@ def launch_demo_env(num_nodes,
     
     if verbose > 0:
       command += " -" + "".join(['v']*verbose)
-      click.echo('We are running: %s', % command)
+      click.echo('We are running: %s' % command)
     
     status = os.system(command)
     if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
