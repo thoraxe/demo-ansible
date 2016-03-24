@@ -1087,7 +1087,6 @@
     },
     "RegistryVolume": {
       "Type": "AWS::EC2::Volume",
-      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC","Subnet1"],
       "Properties": {
         "AvailabilityZone" : {"Fn::Select": ["0", {"Ref": "SubnetAvailabilityZones"}]},
         "Size" : { "Ref": "RegistryVolumeSize" },
@@ -1097,7 +1096,6 @@
     },
     "MetricsVolume": {
       "Type": "AWS::EC2::Volume",
-      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC","Subnet1"],
       "Properties": {
         "AvailabilityZone" : {"Fn::Select": ["0", {"Ref": "SubnetAvailabilityZones"}]},
         "Size" : { "Ref": "MetricsVolumeSize" },
@@ -1107,7 +1105,6 @@
     },
     "LoggingVolume": {
       "Type": "AWS::EC2::Volume",
-      "DependsOn": ["VpcInternetGateway","VpcGA","Vpc","InfraLC","MasterLC","Subnet1"],
       "Properties": {
         "AvailabilityZone" : {"Fn::Select": ["0", {"Ref": "SubnetAvailabilityZones"}]},
         "Size" : { "Ref": "LoggingVolumeSize" },
